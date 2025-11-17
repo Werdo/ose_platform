@@ -1,0 +1,185 @@
+/**
+ * OSE Platform - App Component Styles
+ * Based on Assetflow design patterns
+ */
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Gradient backgrounds (Assetflow style) */
+.gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #84fab0 0%, #28a745 100%);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, #f093fb 0%, #dc3545 100%);
+}
+
+.gradient-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+.gradient-sidebar {
+  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+}
+
+/* Card hover effects (Assetflow admin cards) */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Stat cards with colored left border */
+.stat-card {
+  border-left: 4px solid;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+.stat-card.border-primary {
+  border-left-color: #667eea;
+}
+
+.stat-card.border-success {
+  border-left-color: #28a745;
+}
+
+.stat-card.border-warning {
+  border-left-color: #ffc107;
+}
+
+.stat-card.border-danger {
+  border-left-color: #dc3545;
+}
+
+.stat-card.border-info {
+  border-left-color: #17a2b8;
+}
+
+/* Button enhancements */
+.btn-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-gradient-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  color: white;
+}
+
+/* Badge gradients */
+.badge-gradient-success {
+  background: linear-gradient(135deg, #84fab0 0%, #28a745 100%);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.badge-gradient-inactive {
+  background: linear-gradient(135deg, #a8a8a8 0%, #6c757d 100%);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+/* Admin table styles */
+.admin-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.admin-table thead th {
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  font-weight: 600;
+}
+
+.admin-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background-color: rgba(102, 126, 234, 0.05);
+}
+
+.admin-table tbody td {
+  padding: 1rem;
+}
+
+/* Loading states */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Icon with gradient background (KPI cards) */
+.icon-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.icon-badge.primary {
+  background-color: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+.icon-badge.success {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.icon-badge.warning {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.icon-badge.danger {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+}
+
+.icon-badge.info {
+  background-color: rgba(13, 202, 240, 0.2);
+  color: #0dcaf0;
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etiqueta Dispositivo</title>
+    <style>
+        @page {
+            size: 80mm 48mm;
+            margin: 2mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 8pt;
+            margin: 0;
+            padding: 2mm;
+            display: flex;
+        }
+        .left-section {
+            flex: 1;
+            padding-right: 2mm;
+        }
+        .right-section {
+            text-align: center;
+        }
+        .qr-code {
+            width: 35mm;
+            height: 35mm;
+        }
+        .brand {
+            font-weight: bold;
+            font-size: 10pt;
+            margin-bottom: 2mm;
+        }
+        .imei {
+            font-family: "Courier New", monospace;
+            font-size: 9pt;
+            font-weight: bold;
+            margin: 2mm 0;
+        }
+        .ccid {
+            font-family: "Courier New", monospace;
+            font-size: 7pt;
+            margin: 1mm 0;
+        }
+        .info {
+            font-size: 7pt;
+            color: #666;
+            margin: 1mm 0;
+        }
+        .footer {
+            font-size: 6pt;
+            color: #999;
+            margin-top: 2mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-section">
+        <div class="brand">{{ marca }}</div>
+        <div class="info">REF: {{ referencia }}</div>
+
+        <div class="imei">IMEI: {{ imei }}</div>
+        <div class="ccid">ICCID: {{ ccid }}</div>
+
+        {% if orden %}
+        <div class="info">Orden: {{ orden }}</div>
+        {% endif %}
+
+        {% if lote %}
+        <div class="info">Lote: {{ lote }}</div>
+        {% endif %}
+
+        <div class="footer">{{ fecha }} - {{ company_name }}</div>
+    </div>
+
+    {% if qr_base64 %}
+    <div class="right-section">
+        <img src="data:image/png;base64,{{ qr_base64 }}" class="qr-code" alt="QR Code">
+    </div>
+    {% endif %}
+</body>
+</html>

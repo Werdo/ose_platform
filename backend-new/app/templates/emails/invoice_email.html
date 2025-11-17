@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Su Factura</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: #ffffff;
+            margin: 20px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+            background-color: #ffffff;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .invoice-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #1976d2;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        .invoice-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .invoice-info {
+            font-size: 14px;
+            color: #666;
+        }
+        .custom-message {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-style: italic;
+        }
+        .attachment-info {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .attachment-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #1976d2;
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .footer a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
+        }
+        .signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ company_name }}</h1>
+            <p>Facturación Electrónica</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Estimado/a {{ customer_name }},
+            </div>
+
+            <p class="message">
+                Nos complace adjuntarle su factura electrónica. A continuación encontrará
+                los detalles de su factura:
+            </p>
+
+            <!-- Invoice Box -->
+            <div class="invoice-box">
+                <div class="invoice-number">{{ invoice_number }}</div>
+                <div class="invoice-info">
+                    Factura generada electrónicamente<br>
+                    Documento adjunto en formato PDF
+                </div>
+            </div>
+
+            <!-- Attachment Info -->
+            <div class="attachment-info">
+                <div class="attachment-icon">📎</div>
+                <strong>Archivo adjunto:</strong> Factura_{{ invoice_number }}.pdf
+            </div>
+
+            <!-- Custom Message (if provided) -->
+            {% if custom_message %}
+            <div class="custom-message">
+                {{ custom_message }}
+            </div>
+            {% endif %}
+
+            <p class="message">
+                Para cualquier consulta sobre esta factura, no dude en ponerse en contacto
+                con nosotros. Estaremos encantados de atenderle.
+            </p>
+
+            <div class="divider"></div>
+
+            <p class="message">
+                <strong>Importante:</strong> Este documento es válido como factura electrónica
+                de acuerdo con la normativa vigente. Por favor, guarde este email y el archivo
+                adjunto para sus registros contables.
+            </p>
+
+            <!-- Signature -->
+            <div class="signature">
+                <p style="margin: 0; font-weight: 500;">Atentamente,</p>
+                <p style="margin: 5px 0 0 0; color: #1976d2; font-weight: bold; font-size: 16px;">
+                    {{ company_name }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>{{ company_name }}</strong></p>
+            <p>Este es un email automático. Por favor, no responda a este mensaje.</p>
+            <p style="margin-top: 15px; font-size: 11px; color: #999;">
+                Si tiene problemas para abrir el PDF adjunto, asegúrese de tener instalado
+                un lector de PDF actualizado.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

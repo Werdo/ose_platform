@@ -1,0 +1,26 @@
+/**
+ * Vuetify SASS Variables
+ * Customize Vuetify theme here
+ */
+
+@use 'vuetify/settings' with (
+  $utilities: false,
+  $color-pack: false
+);
+
+// Custom variables
+$border-radius-root: 8px !default;
+$body-font-family: 'Roboto', sans-serif !default;
+$heading-font-family: 'Roboto', sans-serif !default;
+
+// Spacing
+$spacer: 8px !default;
+
+// Typography
+$font-size-root: 16px !default;
+$line-height-root: 1.5 !default;
+
+// Transitions
+$transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1) !default;
+$transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1) !default;
+$transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1) !default;

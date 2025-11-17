@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura {{ invoice_number }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .invoice-header {
+            display: table;
+            width: 100%;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid {{ primary_color }};
+        }
+
+        .company-info {
+            display: table-cell;
+            width: 60%;
+            vertical-align: top;
+        }
+
+        .company-logo {
+            max-width: 180px;
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .company-name {
+            font-size: 20pt;
+            font-weight: bold;
+            color: {{ primary_color }};
+            margin-bottom: 8px;
+        }
+
+        .company-details {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .invoice-title {
+            display: table-cell;
+            width: 40%;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .invoice-title h1 {
+            font-size: 24pt;
+            color: {{ primary_color }};
+            margin-bottom: 10px;
+        }
+
+        .invoice-meta {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .invoice-meta strong {
+            color: #333;
+        }
+
+        /* Customer Info */
+        .invoice-parties {
+            display: table;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .customer-info {
+            display: table-cell;
+            width: 50%;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .customer-info h3 {
+            font-size: 11pt;
+            color: {{ primary_color }};
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .customer-details {
+            font-size: 10pt;
+            line-height: 1.6;
+        }
+
+        /* Invoice Lines Table */
+        .invoice-items {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        thead {
+            background-color: {{ primary_color }};
+            color: white;
+        }
+
+        th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.text-right {
+            text-align: right;
+        }
+
+        th.text-center {
+            text-align: center;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        td {
+            padding: 10px 8px;
+            font-size: 10pt;
+        }
+
+        td.text-right {
+            text-align: right;
+        }
+
+        td.text-center {
+            text-align: center;
+        }
+
+        .item-description {
+            font-weight: 500;
+            color: #333;
+        }
+
+        /* Totals Section */
+        .invoice-totals {
+            float: right;
+            width: 300px;
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .totals-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .totals-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .totals-label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .totals-value {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .total-row {
+            background-color: {{ primary_color }};
+            color: white;
+        }
+
+        .total-row td {
+            padding: 12px 8px !important;
+            font-size: 13pt;
+            font-weight: bold;
+        }
+
+        /* Payment Info */
+        .payment-info {
+            clear: both;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .payment-info h3 {
+            font-size: 11pt;
+            color: {{ primary_color }};
+            margin-bottom: 10px;
+        }
+
+        .payment-details {
+            font-size: 9pt;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+        }
+
+        .footer-text {
+            margin-bottom: 10px;
+        }
+
+        .legal-notice {
+            font-size: 7pt;
+            color: #bbb;
+            margin-top: 10px;
+        }
+
+        /* Ticket References */
+        .ticket-references {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 3px;
+        }
+
+        .ticket-references h3 {
+            font-size: 10pt;
+            color: #f57c00;
+            margin-bottom: 8px;
+        }
+
+        .ticket-list {
+            font-size: 9pt;
+            color: #666;
+        }
+
+        .ticket-item {
+            display: inline-block;
+            margin-right: 15px;
+            padding: 3px 8px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #ffecb3;
+        }
+
+        /* Utility Classes */
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="company-info">
+                {% if company_logo_url %}
+                <img src="{{ company_logo_url }}" alt="{{ company_name }}" class="company-logo">
+                {% endif %}
+                <div class="company-name">{{ company_name }}</div>
+                <div class="company-details">
+                    {% if company_nif %}NIF: {{ company_nif }}<br>{% endif %}
+                    {% if company_address %}{{ company_address }}<br>{% endif %}
+                    {% if company_city %}{{ company_postal_code }} {{ company_city }}<br>{% endif %}
+                    {% if company_phone %}Tel: {{ company_phone }}<br>{% endif %}
+                    {% if company_email %}Email: {{ company_email }}<br>{% endif %}
+                    {% if company_website %}Web: {{ company_website }}{% endif %}
+                </div>
+            </div>
+            <div class="invoice-title">
+                <h1>FACTURA</h1>
+                <div class="invoice-meta">
+                    <strong>Nº:</strong> {{ invoice_number }}<br>
+                    <strong>Fecha:</strong> {{ invoice_date }}<br>
+                    {% if invoice_due_date %}
+                    <strong>Vencimiento:</strong> {{ invoice_due_date }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="invoice-parties">
+            <div class="customer-info">
+                <h3>Facturar a</h3>
+                <div class="customer-details">
+                    <strong>{{ customer_name }}</strong><br>
+                    {% if customer_nif %}NIF/CIF: {{ customer_nif }}<br>{% endif %}
+                    {% if customer_address %}{{ customer_address }}<br>{% endif %}
+                    {% if customer_city %}{{ customer_postal_code }} {{ customer_city }}<br>{% endif %}
+                    {% if customer_phone %}Tel: {{ customer_phone }}<br>{% endif %}
+                    Email: {{ customer_email }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket References (if applicable) -->
+        {% if ticket_numbers and ticket_numbers|length > 0 %}
+        <div class="ticket-references">
+            <h3>Tickets incluidos en esta factura:</h3>
+            <div class="ticket-list">
+                {% for ticket in ticket_numbers %}
+                <span class="ticket-item">{{ ticket }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Invoice Lines -->
+        <div class="invoice-items">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Descripción</th>
+                        <th class="text-center" style="width: 10%;">Cantidad</th>
+                        <th class="text-right" style="width: 15%;">Precio Unit.</th>
+                        <th class="text-right" style="width: 10%;">IVA %</th>
+                        <th class="text-right" style="width: 15%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in lines %}
+                    <tr>
+                        <td class="item-description">{{ line.descripcion }}</td>
+                        <td class="text-center">{{ line.cantidad }}</td>
+                        <td class="text-right">{{ line.precio_unitario|format_currency }}</td>
+                        <td class="text-right">{{ line.iva_porcentaje }}%</td>
+                        <td class="text-right">{{ line.total|format_currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="invoice-totals">
+            <table class="totals-table">
+                <tr>
+                    <td class="totals-label">Subtotal (Base Imponible):</td>
+                    <td class="totals-value">{{ subtotal|format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="totals-label">IVA ({{ tax_rate }}%):</td>
+                    <td class="totals-value">{{ tax_total|format_currency }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>TOTAL A PAGAR:</td>
+                    <td>{{ total|format_currency }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="clearfix"></div>
+
+        <!-- Payment Information -->
+        <div class="payment-info">
+            <h3>Información de Pago</h3>
+            <div class="payment-details">
+                <strong>Condiciones de pago:</strong> {{ payment_terms }}<br>
+                {% if bank_account %}
+                <strong>Cuenta bancaria:</strong> {{ bank_account }}<br>
+                {% endif %}
+                {% if payment_reference %}
+                <strong>Referencia:</strong> {{ payment_reference }}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="invoice-footer">
+            {% if footer_text %}
+            <div class="footer-text">
+                {{ footer_text }}
+            </div>
+            {% endif %}
+            <div class="footer-text">
+                <strong>{{ company_name }}</strong> - {{ company_email }}
+                {% if company_phone %} - {{ company_phone }}{% endif %}
+            </div>
+            {% if legal_notice %}
+            <div class="legal-notice">
+                {{ legal_notice }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

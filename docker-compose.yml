@@ -1,0 +1,163 @@
+version: '3.8'
+
+# ════════════════════════════════════════════════════════════════════════════
+# OSE PLATFORM - Docker Compose Configuration
+# ════════════════════════════════════════════════════════════════════════════
+#
+# Servicios incluidos:
+#   - mongodb: Base de datos principal
+#   - backend: API FastAPI
+#   - mongo-express: Interfaz web para MongoDB (desarrollo)
+#
+# Uso:
+#   docker-compose up -d        # Iniciar todos los servicios
+#   docker-compose down         # Detener todos los servicios
+#   docker-compose logs -f      # Ver logs en tiempo real
+#
+# ════════════════════════════════════════════════════════════════════════════
+
+services:
+  # ──────────────────────────────────────────────────────────────────────────
+  # MONGODB - Base de Datos Principal
+  # ──────────────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:6.0
+    container_name: ose_mongodb
+    restart: unless-stopped
+
+    environment:
+      # Credenciales del usuario root
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root_secure_pass_2025
+      MONGO_INITDB_DATABASE: ose_platform
+
+    ports:
+      - "27018:27017"
+
+    volumes:
+      # Persistencia de datos
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+
+      # Scripts de inicialización (se ejecutan solo la primera vez)
+      - ./backend/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
+    networks:
+      - ose_network
+
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/${MONGODB_DB_NAME} --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+    command:
+      - --auth
+      - --bind_ip_all
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # BACKEND - API FastAPI
+  # ──────────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PYTHON_VERSION: 3.11
+
+    container_name: ose_backend
+    restart: unless-stopped
+
+    env_file:
+      - ./backend/.env
+
+    ports:
+      - "8001:8000"
+
+    volumes:
+      # Código fuente (para desarrollo con hot-reload)
+      - ./backend/app:/app/app:ro
+
+      # Archivos de configuración
+      - ./backend/alembic:/app/alembic:ro
+
+      # Logs
+      - backend_logs:/var/log/ose
+
+      # Uploads temporales
+      - backend_uploads:/tmp/ose_uploads
+
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+    networks:
+      - ose_network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # MONGO EXPRESS - Interfaz Web para MongoDB (SOLO DESARROLLO)
+  # ──────────────────────────────────────────────────────────────────────────
+  mongo-express:
+    image: mongo-express:1.0-20
+    container_name: ose_mongo_express
+    restart: unless-stopped
+
+    profiles:
+      - dev  # Solo se inicia si se especifica: docker-compose --profile dev up
+
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGODB_ROOT_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGODB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGODB_ROOT_USER}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+
+    ports:
+      - "8081:8081"
+
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+    networks:
+      - ose_network
+
+# ══════════════════════════════════════════════════════════════════════════
+# VOLÚMENES - Persistencia de Datos
+# ══════════════════════════════════════════════════════════════════════════
+volumes:
+  # MongoDB
+  mongodb_data:
+    driver: local
+    name: ose_mongodb_data
+
+  mongodb_config:
+    driver: local
+    name: ose_mongodb_config
+
+  # Backend
+  backend_logs:
+    driver: local
+    name: ose_backend_logs
+
+  backend_uploads:
+    driver: local
+    name: ose_backend_uploads
+
+# ══════════════════════════════════════════════════════════════════════════
+# REDES - Comunicación entre Contenedores
+# ══════════════════════════════════════════════════════════════════════════
+networks:
+  ose_network:
+    driver: bridge
+    name: ose_platform_network

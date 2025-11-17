@@ -1,0 +1,170 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom hover effect for picking cards */
+.picking-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.picking-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Custom shadow utilities */
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Table responsive improvements */
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar */
+.table-responsive::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Form focus improvements */
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button group spacing */
+.btn-group .btn {
+  margin: 0;
+}
+
+/* Badge improvements */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Card header improvements */
+.card-header {
+  font-weight: 600;
+}
+
+/* Alert improvements */
+.alert {
+  border-left: 4px solid;
+  border-radius: 0.375rem;
+}
+
+.alert-success {
+  border-left-color: #198754;
+}
+
+.alert-danger {
+  border-left-color: #dc3545;
+}
+
+/* Modal improvements */
+.modal-content {
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Navbar improvements */
+.navbar-brand {
+  font-size: 1.25rem;
+}
+
+.navbar-nav .nav-link {
+  padding: 0.5rem 1rem;
+  transition: color 0.15s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Utility classes */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.fw-bold {
+  font-weight: 700 !important;
+}
+
+/* Print styles for QR codes */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-content,
+  .print-content * {
+    visibility: visible;
+  }
+  .print-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.2em;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+
+  .display-6 {
+    font-size: 1.75rem;
+  }
+
+  .picking-card .card-body {
+    padding: 2rem !important;
+  }
+
+  .picking-card i {
+    font-size: 3rem !important;
+  }
+}

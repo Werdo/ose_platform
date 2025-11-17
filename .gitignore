@@ -1,0 +1,279 @@
+# ════════════════════════════════════════════════════════════════════════════
+# OSE PLATFORM - Git Ignore
+# ════════════════════════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────────────────────
+# CREDENCIALES Y CONFIGURACIÓN SENSIBLE (NUNCA SUBIR A GIT)
+# ──────────────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+credentials.json
+secrets.json
+*.pem
+*.key
+*.crt
+
+# ──────────────────────────────────────────────────────────────────────────
+# Python
+# ──────────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# ──────────────────────────────────────────────────────────────────────────
+# IDEs y Editores
+# ──────────────────────────────────────────────────────────────────────────
+# VSCode
+.vscode/
+!.vscode/settings.json.example
+!.vscode/extensions.json.example
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ──────────────────────────────────────────────────────────────────────────
+# Sistemas Operativos
+# ──────────────────────────────────────────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ──────────────────────────────────────────────────────────────────────────
+# Docker
+# ──────────────────────────────────────────────────────────────────────────
+# No ignorar docker-compose.yml ni Dockerfile, pero sí:
+docker-compose.override.yml
+.dockerignore
+
+# ──────────────────────────────────────────────────────────────────────────
+# Logs
+# ──────────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ──────────────────────────────────────────────────────────────────────────
+# Bases de Datos Locales
+# ──────────────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+data/
+backups/
+
+# ──────────────────────────────────────────────────────────────────────────
+# Archivos Temporales y de Upload
+# ──────────────────────────────────────────────────────────────────────────
+tmp/
+temp/
+uploads/
+downloads/
+*.tmp
+*.temp
+*.cache
+
+# ──────────────────────────────────────────────────────────────────────────
+# Node.js (para futuros frontends)
+# ──────────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+
+# Next.js
+.next/
+out/
+
+# Nuxt.js
+.nuxt/
+dist/
+
+# Gatsby
+.cache/
+
+# vuepress
+.vuepress/dist
+
+# ──────────────────────────────────────────────────────────────────────────
+# Frontend Build
+# ──────────────────────────────────────────────────────────────────────────
+build/
+dist/
+*.local
+
+# ──────────────────────────────────────────────────────────────────────────
+# Archivos de Compilación
+# ──────────────────────────────────────────────────────────────────────────
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# ──────────────────────────────────────────────────────────────────────────
+# Archivos Comprimidos
+# ──────────────────────────────────────────────────────────────────────────
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ──────────────────────────────────────────────────────────────────────────
+# Misc
+# ──────────────────────────────────────────────────────────────────────────
+.env.test
+.cache
+.parcel-cache
+.sass-cache
+.turbo
+.vercel
+
+# ──────────────────────────────────────────────────────────────────────────
+# OSE Platform Specific
+# ──────────────────────────────────────────────────────────────────────────
+# Scripts temporales de desarrollo
+**/simple_create_user.py
+**/create_user*.py
+**/create_ppelaez.py
+create_user_mongo.js
+test_password.py
+
+# Error logs y backups
+ERROR_LOG_*.md
+*-backup-*/
+backend-new-backup-*/
+frontend-backup-*/
+
+# Archivos temporales de Claude Code
+.claude/

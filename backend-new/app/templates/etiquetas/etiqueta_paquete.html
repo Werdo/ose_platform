@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etiqueta Paquete</title>
+    <style>
+        @page {
+            size: 100mm 100mm;
+            margin: 3mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 3mm;
+            text-align: center;
+        }
+        .header {
+            font-weight: bold;
+            font-size: 14pt;
+            margin-bottom: 3mm;
+        }
+        .package-no {
+            font-family: "Courier New", monospace;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 3mm 0;
+            padding: 2mm;
+            border: 2px solid #000;
+        }
+        .qr-code {
+            width: 60mm;
+            height: 60mm;
+            margin: 3mm auto;
+        }
+        .info {
+            font-size: 10pt;
+            margin: 2mm 0;
+        }
+        .quantity {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 2mm 0;
+        }
+        .footer {
+            font-size: 8pt;
+            color: #666;
+            margin-top: 3mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">{{ company_name }}</div>
+
+    <div class="package-no">PKG: {{ package_no }}</div>
+
+    <div class="quantity">{{ quantity }} UNIDADES</div>
+
+    {% if qr_base64 %}
+    <div>
+        <img src="data:image/png;base64,{{ qr_base64 }}" class="qr-code" alt="QR Code">
+    </div>
+    {% endif %}
+
+    <div class="info">
+        <strong>Orden:</strong> {{ orden }}<br>
+        <strong>Destino:</strong> {{ destino }}
+    </div>
+
+    <div class="footer">{{ fecha }}</div>
+</body>
+</html>

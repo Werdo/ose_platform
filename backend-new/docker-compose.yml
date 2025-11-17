@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # ════════════════════════════════════════════════════════════════════════
+  # MONGODB
+  # ════════════════════════════════════════════════════════════════════════
+  mongodb:
+    image: mongo:6.0
+    container_name: ose_mongodb
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root_secure_pass_2025
+      MONGO_INITDB_DATABASE: ose_platform
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - ose-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/ose_platform --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    command:
+      - --auth
+      - --bind_ip_all
+
+  # ════════════════════════════════════════════════════════════════════════
+  # BACKEND API
+  # ════════════════════════════════════════════════════════════════════════
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ose_backend
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - MONGODB_URI=mongodb://ose_user:ose_secure_pass_2025@mongodb:27017/ose_platform?authSource=admin
+      - MONGODB_DB_NAME=ose_platform
+      - HOST=0.0.0.0
+      - PORT=8000
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ose-network
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+# ════════════════════════════════════════════════════════════════════════
+# NETWORKS
+# ════════════════════════════════════════════════════════════════════════
+networks:
+  ose-network:
+    driver: bridge
+
+# ════════════════════════════════════════════════════════════════════════
+# VOLUMES
+# ════════════════════════════════════════════════════════════════════════
+volumes:
+  mongodb_data:
+    external: true
+    name: ose_mongodb_data
+  mongodb_config:
+    external: true
+    name: ose_mongodb_config

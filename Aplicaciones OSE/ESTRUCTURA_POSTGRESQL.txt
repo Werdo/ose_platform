@@ -1,0 +1,607 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║           ESTRUCTURA BASE DE DATOS POSTGRESQL - OVERSUN ENERGY       ║
+║                    Database: oversunserverDB                         ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+INFORMACIÓN GENERAL
+═══════════════════════════════════════════════════════════════════════
+
+Database:        oversunserverDB
+Engine:          PostgreSQL 14.18
+Schemas:         Algepser (legacy), algepser (actual), algepser_prueba
+Primary User:    panda
+Locale:          en_US.UTF-8
+Export Date:     4 de Noviembre, 2025
+
+═══════════════════════════════════════════════════════════════════════
+
+ESQUEMA: algepser (PRINCIPAL - EN USO)
+═══════════════════════════════════════════════════════════════════════
+
+📋 RESUMEN DE TABLAS
+────────────────────────────────────────────────────────────────────────
+
+1.  control_calidad                  - Control de calidad (contador)
+2.  control_calidad_history          - Historial de control de calidad
+3.  control_calidad_linea1           - Control de calidad línea 1
+4.  control_calidad_linea1_history   - Historial QC línea 1
+5.  control_calidad_linea2           - Control de calidad línea 2
+6.  control_calidad_linea2_history   - Historial QC línea 2
+7.  cupon_de_trabajo                 - Cupón de trabajo puesto 1
+8.  cupon_de_trabajo_puesto2         - Cupón de trabajo puesto 2
+9.  cupones_de_trabajo               - Cupones de trabajo (multi-línea)
+10. marca_referencia                 - Relación marca-referencia
+11. metrics                          - Métricas de producción
+12. oem_box                          - Control de cajas OEM
+13. oem_registros                    - Registros de producción OEM
+14. orden_produccion                 - Órdenes de producción
+15. personal                         - Personal operativo
+16. personal_admin                   - Personal administrativo
+17. registros_2025                   - Registros de producción 2025
+18. registros_2025_puesto2           - Registros puesto 2 (2025)
+
+═══════════════════════════════════════════════════════════════════════
+
+TABLAS DETALLADAS
+═══════════════════════════════════════════════════════════════════════
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 1. control_calidad                                                   │
+│    Control de calidad - Contador general                             │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_control           integer           NO      Número de control (PK)
+current_count         integer           YES     Contador actual
+
+Permisos: readonly (SELECT)
+Uso: Lleva el conteo de inspecciones de calidad
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 2. control_calidad_history                                           │
+│    Historial de inspecciones de control de calidad                  │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+fecha                 character(20)     NO      Fecha de inspección (PK)
+imei                  character(25)     YES     IMEI del dispositivo
+ccid                  character(25)     YES     ICCID de la SIM
+status                integer           YES     Estado (0=rechazado, 1=aprobado)
+
+Permisos: readonly (SELECT)
+Uso: Registra cada inspección de calidad realizada
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 3. control_calidad_linea1                                            │
+│    Control de calidad específico para línea 1                        │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_control           integer           NO      Número de control (PK)
+current_count         integer           YES     Contador actual línea 1
+
+Permisos: readonly (SELECT)
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 4. control_calidad_linea1_history                                    │
+│    Historial de control de calidad - Línea 1                        │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+fecha                 character(20)     NO      Fecha de inspección (PK)
+imei                  character(25)     YES     IMEI del dispositivo
+ccid                  character(25)     YES     ICCID de la SIM
+status                integer           YES     Estado de inspección
+nro_orden             character(25)     YES     Número de orden
+
+Permisos: readonly (SELECT)
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 5. control_calidad_linea2                                            │
+│    Control de calidad específico para línea 2                        │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_control           integer           NO      Número de control (PK)
+current_count         integer           YES     Contador actual línea 2
+
+Permisos: readonly (SELECT)
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 6. control_calidad_linea2_history                                    │
+│    Historial de control de calidad - Línea 2                        │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+fecha                 character(20)     NO      Fecha de inspección (PK)
+imei                  character(25)     YES     IMEI del dispositivo
+ccid                  character(25)     YES     ICCID de la SIM
+status                integer           YES     Estado de inspección
+nro_orden             character(25)     YES     Número de orden
+
+Permisos: readonly (SELECT)
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 7. cupon_de_trabajo                                                  │
+│    Cupones de trabajo para puesto 1                                 │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_orden             character(25)     NO      Número de orden (PK)
+nro_referencia        character(25)     YES     Número de referencia
+cantidad              integer           YES     Cantidad total
+balizas_registradas   integer           YES     Balizas registradas
+lote                  integer           YES     Número de lote actual
+total_lotes           integer           YES     Total de lotes
+sku                   integer           YES     Código SKU
+
+Permisos: readonly (SELECT)
+Uso: Gestiona el trabajo en el puesto 1
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 8. cupon_de_trabajo_puesto2                                          │
+│    Cupones de trabajo para puesto 2                                 │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_orden             character(25)     NO      Número de orden (PK)
+nro_referencia        character(14)     YES     Número de referencia
+cantidad              integer           YES     Cantidad total
+balizas_registradas   integer           YES     Balizas registradas
+lote                  integer           YES     Número de lote actual
+total_lotes           integer           YES     Total de lotes
+sku                   integer           YES     Código SKU
+etq96                 integer           YES     Etiquetas 96mm
+etq80                 integer           YES     Etiquetas 80mm
+etq24                 integer           YES     Etiquetas 24mm
+
+Permisos: readonly (SELECT)
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 9. cupones_de_trabajo                                                │
+│    Cupones de trabajo multi-línea (versión consolidada)             │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_orden             character(25)     NO      Número de orden (PK)
+nro_referencia        character(25)     YES     Número de referencia
+cantidad              integer           YES     Cantidad total
+linea                 integer           YES     Línea de producción
+sku                   integer           YES     Código SKU
+on_hold               integer           YES     En espera (0/1)
+etq24                 integer           YES     Etiquetas 24mm
+etq80                 integer           YES     Etiquetas 80mm
+etq96                 integer           YES     Etiquetas 96mm
+puesto1               integer           YES     Activo en puesto 1
+puesto2               integer           YES     Activo en puesto 2
+total_lotes1          integer           YES     Total lotes puesto 1
+total_lotes2          integer           YES     Total lotes puesto 2
+lote1                 integer           YES     Lote actual puesto 1
+lote2                 integer           YES     Lote actual puesto 2
+balizas_registradas1  integer           YES     Balizas puesto 1
+balizas_registradas2  integer           YES     Balizas puesto 2
+etq48                 integer           YES     Etiquetas 48mm
+etq12                 integer           YES     Etiquetas 12mm
+lote3                 integer           YES     Lote 3 (línea 3)
+
+Permisos: readonly (SELECT)
+Uso: Control completo de cupones en todas las líneas
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 10. marca_referencia                                                 │
+│     Relación entre marcas y números de referencia                   │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+marca                 character(20)     NO      Marca (PK)
+nro_referencia        character(13)     YES     Número de referencia
+
+Permisos: readonly (SELECT)
+Uso: Mapeo de marcas a referencias de producto
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 11. metrics                                                          │
+│     Métricas de producción por orden                                │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_orden             character(20)     NO      Número de orden (PK)
+start_fecha           character(20)     YES     Fecha de inicio
+end_fecha             character(20)     YES     Fecha de finalización
+duration              character(10)     YES     Duración total
+duration_per_lot      character(10)     YES     Duración por lote
+operator_puesto       character(20)     YES     Operador puesto 1
+operator_puesto_2     character(20)     YES     Operador puesto 2
+
+Permisos: readonly (SELECT)
+Uso: Análisis de tiempos y eficiencia
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 12. oem_box                                                          │
+│     Control de cajas OEM                                            │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+fecha                 character(25)     NO      Fecha (PK)
+imei                  character(30)     YES     IMEI
+ccid                  character(30)     YES     ICCID
+check                 integer           YES     Estado de verificación
+
+Permisos: readonly (SELECT)
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 13. oem_registros                                                    │
+│     Registros de producción OEM                                     │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro                   integer           NO      Número secuencial (PK)
+nro_orden             character(25)     YES     Número de orden
+fecha                 character(25)     YES     Fecha de registro
+imei                  character(25)     YES     IMEI del dispositivo
+ccid                  character(25)     YES     ICCID de la SIM
+status                integer           YES     Estado
+lote                  integer           YES     Lote
+linea                 integer           YES     Línea de producción
+
+Permisos: readonly (SELECT)
+Uso: Registros específicos para producción OEM
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 14. orden_produccion                                                 │
+│     Órdenes de producción principales                               │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro_orden             character(25)     NO      Número de orden (PK)
+nro_referencia        character(13)     YES     Referencia del producto
+sku                   integer           YES     Código SKU
+cantidad              integer           YES     Cantidad a producir
+fecha                 character(10)     YES     Fecha de creación
+responsable           character(20)     YES     Responsable
+detalles              character(300)    YES     Detalles adicionales
+status                integer           YES     Estado (0=pendiente, 1=en proceso, 2=completo)
+in_process            integer           YES     En proceso (0/1)
+complete              integer           YES     Completado (0/1)
+start_fecha           character(20)     YES     Fecha de inicio
+end_fecha             character(20)     YES     Fecha de finalización
+packing               integer           YES     En empaque (0/1)
+on_hold               integer           YES     En espera (0/1)
+linea                 integer           YES     Línea de producción (1/2/3)
+
+Permisos: readonly (SELECT)
+Uso: Tabla principal de gestión de órdenes
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 15. personal                                                         │
+│     Personal operativo                                              │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+id                    character(5)      NO      ID del empleado (PK)
+name                  character(10)     YES     Nombre
+surname               character(20)     YES     Apellidos
+secretkey             character(50)     YES     Clave secreta/PIN
+master                integer           YES     Es supervisor (0/1)
+status                integer           YES     Estado (0=inactivo, 1=activo)
+puesto1_linea1        integer           YES     Permiso puesto 1 línea 1
+puesto2_linea1        integer           YES     Permiso puesto 2 línea 1
+puesto1_linea2        integer           YES     Permiso puesto 1 línea 2
+puesto2_linea2        integer           YES     Permiso puesto 2 línea 2
+control_calidad       integer           YES     Permiso control calidad
+puesto1_linea3        integer           YES     Permiso puesto 1 línea 3
+puesto2_linea3        integer           YES     Permiso puesto 2 línea 3
+
+Permisos: readonly (SELECT)
+Uso: Gestión de personal operativo con permisos granulares
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 16. personal_admin                                                   │
+│     Personal administrativo                                         │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro                   integer           NO      Número (PK)
+name                  character(15)     YES     Nombre
+surname               character(15)     YES     Apellidos
+key                   character(15)     YES     Clave de acceso
+status                integer           NO      Estado (default: 0)
+master                integer           NO      Es master (default: 0)
+
+Permisos: readonly (SELECT)
+Uso: Usuarios con permisos administrativos
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 17. registros_2025                                                   │
+│     Registros de producción año 2025                                │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro                   integer           NO      Número secuencial (PK)
+nro_orden             character(20)     YES     Número de orden
+fecha                 character(20)     YES     Fecha de registro
+lote                  integer           YES     Lote
+imei                  character(20)     YES     IMEI del dispositivo
+ccid                  character(30)     YES     ICCID de la SIM
+linea1                integer           YES     Registrado en línea 1 (0/1)
+linea2                integer           YES     Registrado en línea 2 (0/1)
+operador              character(40)     YES     Operador que registró
+linea3                integer           YES     Registrado en línea 3 (0/1)
+
+Permisos: readonly (SELECT)
+Uso: Tabla principal de registros de producción
+Nota: Esta tabla crece rápidamente, considerar particionamiento
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ 18. registros_2025_puesto2                                           │
+│     Registros de producción puesto 2 - año 2025                     │
+└──────────────────────────────────────────────────────────────────────┘
+
+Campo                 Tipo              Null    Descripción
+───────────────────────────────────────────────────────────────────────
+nro                   integer           NO      Número secuencial (PK)
+nro_orden             character(20)     YES     Número de orden
+fecha                 character(20)     YES     Fecha de registro
+lote2                 integer           YES     Lote del puesto 2
+imei                  character(20)     YES     IMEI del dispositivo
+ccid                  character(30)     YES     ICCID de la SIM
+linea1                integer           YES     Línea 1 (0/1)
+linea2                integer           YES     Línea 2 (0/1)
+operador              character(40)     YES     Operador
+linea3                integer           YES     Línea 3 (0/1)
+
+Permisos: readonly (SELECT)
+
+═══════════════════════════════════════════════════════════════════════
+
+ESQUEMA: Algepser (LEGACY - NO EN USO)
+═══════════════════════════════════════════════════════════════════════
+
+Este esquema contiene versiones antiguas de tablas:
+- cupones_de_trabajo
+- marca_referencia
+- metrics
+- orden_de_produccion
+- orden_produccion2
+- packingDB
+- personal
+- personal_admin
+- registros_2024
+- registros_2025
+- registros_custom
+- registros_ital_2024
+- registros_oem
+
+⚠️  NOTA: Estas tablas están deprecadas. Usar el esquema "algepser" (minúsculas)
+
+═══════════════════════════════════════════════════════════════════════
+
+ESQUEMA: algepser_prueba
+═══════════════════════════════════════════════════════════════════════
+
+Esquema de pruebas que contiene:
+- control_calidad_linea1
+- control_calidad_linea1_history
+- control_calidad_linea2
+- control_calidad_linea2_history
+
+═══════════════════════════════════════════════════════════════════════
+
+RELACIONES Y FLUJO DE DATOS
+═══════════════════════════════════════════════════════════════════════
+
+┌──────────────────┐
+│ orden_produccion │
+└────────┬─────────┘
+         │ nro_orden
+         ↓
+┌─────────────────────┐      ┌──────────────────┐
+│ cupones_de_trabajo  │      │ marca_referencia │
+└──────────┬──────────┘      └────────┬─────────┘
+           │                          │
+           │ nro_orden                │ nro_referencia
+           ↓                          ↓
+    ┌──────────────┐         ┌──────────────┐
+    │ registros_   │←────────│  personal    │
+    │    2025      │         └──────────────┘
+    └──────┬───────┘              operador
+           │ imei/ccid
+           ↓
+    ┌──────────────────────┐
+    │ control_calidad_     │
+    │      history         │
+    └──────────────────────┘
+           │
+           ↓
+    ┌──────────────┐
+    │   metrics    │
+    └──────────────┘
+
+═══════════════════════════════════════════════════════════════════════
+
+CAMPOS COMUNES Y CONVENCIONES
+═══════════════════════════════════════════════════════════════════════
+
+Identificadores:
+  nro_orden          → Número de orden de producción
+  nro_referencia     → Referencia del producto/modelo
+  sku                → Stock Keeping Unit
+  imei               → International Mobile Equipment Identity
+  ccid               → Integrated Circuit Card Identifier
+
+Estados (generalmente integer):
+  status             → 0=inactivo/pendiente, 1=activo/completo
+  in_process         → 0=no, 1=sí
+  complete           → 0=no, 1=sí
+  on_hold            → 0=no, 1=sí
+
+Fechas:
+  - Almacenadas como character(20) en formato texto
+  - No hay tipo DATE nativo en el esquema actual
+  - Formato común: "YYYY-MM-DD HH:MM:SS" o "DD/MM/YYYY"
+
+Líneas de Producción:
+  - linea / linea1 / linea2 / linea3
+  - Valores: 1, 2, 3 (integer)
+
+Etiquetas:
+  - etq24, etq48, etq80, etq96
+  - Representa diferentes tamaños de etiquetas en mm
+
+═══════════════════════════════════════════════════════════════════════
+
+ANÁLISIS Y RECOMENDACIONES PARA MIGRACIÓN
+═══════════════════════════════════════════════════════════════════════
+
+🔴 PROBLEMAS IDENTIFICADOS:
+
+1. Fechas como texto (character) en lugar de DATE/TIMESTAMP
+   → Dificulta consultas y ordenamiento
+   → No hay validación de formato
+
+2. Estados numéricos sin constraints
+   → No hay validación de valores permitidos
+   → Dificulta entender el significado
+
+3. Múltiples tablas para el mismo concepto
+   → control_calidad_linea1, control_calidad_linea2
+   → Dificulta consultas consolidadas
+
+4. Falta de foreign keys explícitas
+   → No hay integridad referencial forzada
+   → Posibles registros huérfanos
+
+5. Campos de tamaño fijo (character)
+   → Desperdicio de espacio
+   → Strings truncados
+
+6. Sin índices documentados
+   → Performance potencialmente bajo en búsquedas
+
+🟢 VENTAJAS DE MIGRAR A MONGODB:
+
+✓ Fechas nativas (ISODate)
+✓ Estados con enum validation
+✓ Documentos embebidos (eliminar joins)
+✓ Esquema flexible pero validado
+✓ Índices definidos y documentados
+✓ Trazabilidad mejorada
+✓ Escalabilidad horizontal
+
+═══════════════════════════════════════════════════════════════════════
+
+ESTADÍSTICAS ESTIMADAS
+═══════════════════════════════════════════════════════════════════════
+
+Tabla                              Registros Est.    Crecimiento
+───────────────────────────────────────────────────────────────────────
+registros_2025                     Alto (miles)      Diario
+registros_2025_puesto2             Alto (miles)      Diario
+control_calidad_*_history          Alto              Diario
+orden_produccion                   Medio (cientos)   Semanal
+cupones_de_trabajo                 Medio             Diario
+oem_registros                      Medio             Diario
+personal                           Bajo (decenas)    Mensual
+marca_referencia                   Bajo              Trimestral
+
+═══════════════════════════════════════════════════════════════════════
+
+MAPEO PROPUESTO PARA MONGODB
+═══════════════════════════════════════════════════════════════════════
+
+PostgreSQL                          →  MongoDB
+────────────────────────────────────────────────────────────────────────
+orden_produccion                    →  production_orders
+registros_2025                      →  devices + device_events
+registros_2025_puesto2              →  devices + device_events
+cupones_de_trabajo                  →  production_orders.batches
+control_calidad_*_history           →  quality_control + device_events
+personal                            →  employees
+personal_admin                      →  employees (role: admin)
+marca_referencia                    →  devices.brand (embedded)
+metrics                             →  metrics (agregado)
+oem_registros                       →  devices (type: oem)
+oem_box                             →  devices.metadata
+
+═══════════════════════════════════════════════════════════════════════
+
+CONSULTAS SQL ÚTILES PARA EXPORTACIÓN
+═══════════════════════════════════════════════════════════════════════
+
+-- Contar registros por tabla
+SELECT 
+    schemaname,
+    tablename,
+    n_live_tup AS row_count
+FROM pg_stat_user_tables
+WHERE schemaname = 'algepser'
+ORDER BY n_live_tup DESC;
+
+-- Exportar orden_produccion a CSV
+COPY (SELECT * FROM algepser.orden_produccion) 
+TO '/tmp/orden_produccion.csv' 
+WITH CSV HEADER;
+
+-- Exportar registros_2025 con límite
+COPY (SELECT * FROM algepser.registros_2025 LIMIT 1000) 
+TO '/tmp/registros_2025_sample.csv' 
+WITH CSV HEADER;
+
+-- Ver tamaño de tablas
+SELECT 
+    schemaname,
+    tablename,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
+FROM pg_tables
+WHERE schemaname = 'algepser'
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+
+═══════════════════════════════════════════════════════════════════════
+
+NOTAS ADICIONALES
+═══════════════════════════════════════════════════════════════════════
+
+• Los permisos "readonly" indican tablas consultadas por sistemas externos
+• El usuario "panda" tiene acceso completo a los esquemas
+• Las tablas de 2025 probablemente necesitarán particionamiento
+• Considerar archive de registros antiguos (2024 y anteriores)
+• La tabla "registros_2025" es la más crítica (alta frecuencia de escritura)
+
+═══════════════════════════════════════════════════════════════════════
+
+DOCUMENTO GENERADO: 11 de Noviembre, 2025
+Para: Oversun Energy - Proyecto de Migración a MongoDB
