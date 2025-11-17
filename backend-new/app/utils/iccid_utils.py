@@ -149,6 +149,27 @@ def generate_iccid_count(
     return generate_iccid_range(iccid_start, iccid_end)
 
 
+def generate_iccid_with_checksum(base_iccid: str, number: int) -> str:
+    """
+    Genera un ICCID con checksum a partir de un base y un número
+
+    Args:
+        base_iccid: Prefijo del ICCID (ej: "89882260")
+        number: Número secuencial a agregar
+
+    Returns:
+        ICCID completo con dígito de control Luhn
+    """
+    # Concatenar base + número
+    iccid_without_check = base_iccid + str(number)
+
+    # Calcular dígito de control
+    check_digit = luhn_check_digit(iccid_without_check)
+
+    # Retornar ICCID completo
+    return iccid_without_check + check_digit
+
+
 def validate_iccid_format(iccid: str) -> Tuple[bool, str]:
     """
     Valida el formato básico de un ICCID

@@ -25,6 +25,7 @@ import SystemLogsPage from '../pages/admin/SystemLogsPage'
 import BrandUpdatePage from '../pages/admin/BrandUpdatePage'
 import InvoiceManagementPage from '../pages/invoice/InvoiceManagementPage'
 import PickingPortalPage from '../pages/picking/PickingPortalPage'
+import ICCIDCalculatorPage from '../pages/iccid/ICCIDCalculatorPage'
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -122,6 +123,10 @@ export default function AppRoutes() {
         {/* App 6: Picking Lists */}
         <Route path="app6" element={<PickingPortalPage />} />
         <Route path="picking" element={<PickingPortalPage />} />
+
+        {/* App 8: Calculadora ICCID */}
+        <Route path="app8" element={<ICCIDCalculatorPage />} />
+        <Route path="iccid-calculator" element={<ICCIDCalculatorPage />} />
 
         {/* Admin - Backend Configuration */}
         <Route

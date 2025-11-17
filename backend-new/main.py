@@ -12,7 +12,7 @@ import logging
 from app.config import settings
 from app.database import init_db, close_db, check_database_health
 from app.routers import auth, app1_notify, app2_import, app3_rma, app4_transform, public_auth, public_tickets
-from app.routers import app5_invoice, app6_picking, system_logs, brand_update, employees
+from app.routers import app5_invoice, app6_picking, app8_iccid_calculator, system_logs, brand_update, employees
 
 # Configurar logging
 logging.basicConfig(
@@ -128,6 +128,22 @@ if settings.FEATURE_APP5_ENABLED:
 if settings.FEATURE_APP6_ENABLED:
     app.include_router(app6_picking.router, prefix=settings.API_V1_PREFIX)
     logger.info("✓ App 6 (Picking & Etiquetado) enabled")
+
+# App 8: Calculadora de ICCID con Historial
+try:
+    logger.info(f"DEBUG: About to include app8 router with prefix: {settings.API_V1_PREFIX}")
+    logger.info(f"DEBUG: Router has {len(app8_iccid_calculator.router.routes)} routes")
+
+    # Add test endpoint directly to app
+    @app.get("/api/v1/test-app8")
+    def test_app8():
+        return {"message": "App 8 test endpoint works!", "router_routes": len(app8_iccid_calculator.router.routes)}
+
+    app.include_router(app8_iccid_calculator.router, prefix=settings.API_V1_PREFIX)
+    logger.info("✓ App 8 (Calculadora ICCID) enabled")
+    logger.info(f"DEBUG: App now has {len(app.routes)} total routes")
+except Exception as e:
+    logger.error(f"✗ Error including app8 router: {e}", exc_info=True)
 
 # Portal Público - Autenticación y Tickets
 app.include_router(public_auth.router, prefix=settings.API_V1_PREFIX)

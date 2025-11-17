@@ -87,6 +87,7 @@ class Database:
         from app.models.package import Package
         from app.models.system_log import SystemLog
         from app.models.iccid_generation import ICCIDGenerationBatch
+        from app.models.iccid_batch import ICCIDBatch
 
         return [
             Device,
@@ -111,6 +112,7 @@ class Database:
             InvoiceConfig,  # App 5: Configuración de facturación
             Pallet,  # App 6: Palets de picking
             Package,  # App 6: Paquetería y tracking
+            ICCIDBatch,  # App 8: Lotes de ICCID con análisis
             SystemLog,  # System: Logs del sistema
         ]
 

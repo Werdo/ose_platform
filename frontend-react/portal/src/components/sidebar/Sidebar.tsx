@@ -83,6 +83,15 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       icon: 'bi-box-seam-fill',
       color: '#6c757d',
       permission: 'app6_access'
+    },
+    {
+      id: 8,
+      name: 'Calculadora ICCID',
+      shortName: 'ICCID',
+      route: '/app8',
+      icon: 'bi-calculator-fill',
+      color: '#6f42c1',
+      permission: 'app8_access'
     }
   ]
 
