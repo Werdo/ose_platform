@@ -169,39 +169,60 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
             <div>
               {allApps.map(app => {
                 const allowed = hasAccess(app)
+                const className = `px-3 py-2 mb-1 ${
+                  allowed
+                    ? (isActive(app.route) ? 'bg-primary text-white' : 'text-light')
+                    : 'text-muted disabled'
+                }`
+                const style = {
+                  cursor: allowed ? 'pointer' : 'not-allowed',
+                  opacity: allowed ? 1 : 0.5,
+                  pointerEvents: allowed ? 'auto' : 'none'
+                } as React.CSSProperties
+
+                if (allowed) {
+                  return (
+                    <Nav.Link
+                      key={app.id}
+                      as={Link}
+                      to={app.route}
+                      className={className}
+                      style={style}
+                      title={app.name}
+                    >
+                      <i
+                        className={`${app.icon} me-3`}
+                        style={{
+                          fontSize: '1.2rem',
+                          color: isActive(app.route) ? 'white' : app.color
+                        }}
+                      ></i>
+                      {isOpen && <span>{app.shortName}</span>}
+                    </Nav.Link>
+                  )
+                }
+
                 return (
-                  <Nav.Link
+                  <div
                     key={app.id}
-                    as={allowed ? Link : 'div'}
-                    to={allowed ? app.route : undefined}
-                    className={`px-3 py-2 mb-1 ${
-                      allowed
-                        ? (isActive(app.route) ? 'bg-primary text-white' : 'text-light')
-                        : 'text-muted disabled'
-                    }`}
-                    style={{
-                      cursor: allowed ? 'pointer' : 'not-allowed',
-                      opacity: allowed ? 1 : 0.5,
-                      pointerEvents: allowed ? 'auto' : 'none'
-                    }}
-                    title={allowed ? app.name : `${app.name} (Sin acceso)`}
+                    className={className}
+                    style={style}
+                    title={`${app.name} (Sin acceso)`}
                   >
                     <i
                       className={`${app.icon} me-3`}
                       style={{
                         fontSize: '1.2rem',
-                        color: allowed
-                          ? (isActive(app.route) ? 'white' : app.color)
-                          : '#6c757d'
+                        color: '#6c757d'
                       }}
                     ></i>
                     {isOpen && (
                       <span>
                         {app.shortName}
-                        {!allowed && <i className="bi bi-lock-fill ms-2" style={{ fontSize: '0.8rem' }}></i>}
+                        <i className="bi bi-lock-fill ms-2" style={{ fontSize: '0.8rem' }}></i>
                       </span>
                     )}
-                  </Nav.Link>
+                  </div>
                 )
               })}
             </div>

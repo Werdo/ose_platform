@@ -416,12 +416,12 @@ export default function ICCIDCalculatorPage() {
                     <Table bordered size="sm" className="mb-3">
                       <tbody>
                         <tr>
-                          <th>ICCID Base:</th>
-                          <td><code>{generatedBatch.base_iccid}</code></td>
+                          <th>ICCID Inicio:</th>
+                          <td><code>{generatedBatch.iccid_start}</code></td>
                         </tr>
                         <tr>
-                          <th>Rango:</th>
-                          <td>{generatedBatch.start_number} - {generatedBatch.end_number}</td>
+                          <th>ICCID Fin:</th>
+                          <td><code>{generatedBatch.iccid_end}</code></td>
                         </tr>
                         <tr>
                           <th>Total ICCIDs:</th>
@@ -695,7 +695,7 @@ export default function ICCIDCalculatorPage() {
                             <div className="small text-muted">{batch.description}</div>
                           )}
                         </td>
-                        <td><code>{batch.base_iccid}</code></td>
+                        <td><code>{batch.iccid_start}</code></td>
                         <td>
                           <Badge bg="primary">{batch.total_count}</Badge>
                         </td>

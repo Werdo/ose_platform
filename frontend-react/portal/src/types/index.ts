@@ -16,7 +16,7 @@ export interface User {
   updated_at?: string
 }
 
-export type EmployeeRole = 'admin' | 'operator' | 'supervisor' | 'viewer'
+export type EmployeeRole = 'super_admin' | 'admin' | 'operator' | 'supervisor' | 'viewer'
 
 export type EmployeeStatus = 'active' | 'inactive' | 'suspended'
 
