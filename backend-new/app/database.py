@@ -88,6 +88,7 @@ class Database:
         from app.models.system_log import SystemLog
         from app.models.iccid_generation import ICCIDGenerationBatch
         from app.models.iccid_batch import ICCIDBatch
+        from app.models.client_user import ClientUser
 
         return [
             Device,
@@ -114,6 +115,7 @@ class Database:
             Package,  # App 6: Paquetería y tracking
             ICCIDBatch,  # App 8: Lotes de ICCID con análisis
             SystemLog,  # System: Logs del sistema
+            ClientUser,  # System: Usuarios clientes externos
         ]
 
     @classmethod

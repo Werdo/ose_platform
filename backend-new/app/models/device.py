@@ -53,6 +53,52 @@ class Device(Document):
     )
 
     # ════════════════════════════════════════════════════════════════════
+    # OPERADOR (inferido del ICCID)
+    # ════════════════════════════════════════════════════════════════════
+
+    operador: Optional[str] = Field(
+        default=None,
+        description="Operador de telefonía (inferido del ICCID)",
+        index=True
+    )
+
+    operador_marca: Optional[str] = Field(
+        default=None,
+        description="Marca comercial del operador"
+    )
+
+    operador_pais: Optional[str] = Field(
+        default=None,
+        description="País del operador"
+    )
+
+    operador_region: Optional[str] = Field(
+        default=None,
+        description="Región del operador (Global, Europa, etc.)"
+    )
+
+    iin_prefix: Optional[str] = Field(
+        default=None,
+        description="Prefijo IIN del ICCID (6-8 dígitos)",
+        index=True
+    )
+
+    operador_uso: Optional[str] = Field(
+        default=None,
+        description="Tipo de uso (IoT, M2M, Consumer, etc.)"
+    )
+
+    operador_red: Optional[str] = Field(
+        default=None,
+        description="Tipo de red (LTE-M, NB-IoT, 2G/3G/4G, etc.)"
+    )
+
+    operador_actualizado: Optional[datetime] = Field(
+        default=None,
+        description="Fecha de última actualización de información del operador"
+    )
+
+    # ════════════════════════════════════════════════════════════════════
     # PRODUCCIÓN
     # ════════════════════════════════════════════════════════════════════
 
@@ -274,10 +320,14 @@ class Device(Document):
             "package_no",
             "notificado",
             "fecha_creacion",
+            "operador",  # Nuevo: búsqueda por operador
+            "iin_prefix",  # Nuevo: búsqueda por IIN
             [("imei", 1), ("estado", 1)],
             [("nro_orden", 1), ("lote", 1)],
             [("cliente", 1), ("estado", 1)],
-            [("notificado", 1), ("cliente", 1)]
+            [("notificado", 1), ("cliente", 1)],
+            [("operador", 1), ("estado", 1)],  # Nuevo: dispositivos por operador
+            [("iin_prefix", 1), ("operador", 1)]  # Nuevo: análisis por IIN
         ]
 
     # ════════════════════════════════════════════════════════════════════
@@ -375,6 +425,45 @@ class Device(Document):
             }
         )
         await event.insert()
+
+    async def actualizar_operador_desde_iccid(self) -> bool:
+        """
+        Actualiza la información del operador desde el ICCID usando el analizador
+
+        Returns:
+            bool: True si se actualizó la información, False si no hay ICCID o no se encontró IIN
+        """
+        if not self.ccid:
+            return False
+
+        from app.utils.iccid_analyzer import analyze_iccid
+
+        try:
+            # Analizar el ICCID
+            result = analyze_iccid(self.ccid)
+
+            # Si hay perfil de IIN, actualizar los campos
+            if result.get("iin_profile"):
+                profile = result["iin_profile"]
+
+                self.operador = profile.get("operator")
+                self.operador_marca = profile.get("brand")
+                self.operador_pais = profile.get("country")
+                self.operador_region = profile.get("region")
+                self.iin_prefix = result.get("iin_prefix")
+                self.operador_uso = profile.get("use_case")
+                self.operador_red = profile.get("core_network")
+                self.operador_actualizado = datetime.utcnow()
+
+                await self.save()
+                return True
+
+        except Exception as e:
+            # Log del error pero no falla
+            import logging
+            logging.error(f"Error al actualizar operador para device {self.imei}: {e}")
+
+        return False
 
     # ════════════════════════════════════════════════════════════════════
     # MÉTODOS ESTÁTICOS

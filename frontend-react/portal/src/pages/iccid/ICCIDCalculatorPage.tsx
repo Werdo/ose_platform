@@ -15,9 +15,8 @@ interface ICCIDBatch {
   _id: string;
   batch_name: string;
   description: string;
-  base_iccid: string;
-  start_number: number;
-  end_number: number;
+  iccid_start: string;
+  iccid_end: string;
   total_count: number;
   iccids: string[];
   analyses: ICCIDAnalysis[];
@@ -69,9 +68,8 @@ export default function ICCIDCalculatorPage() {
   // Generator State
   const [batchName, setBatchName] = useState('');
   const [description, setDescription] = useState('');
-  const [baseIccid, setBaseIccid] = useState('');
-  const [startNumber, setStartNumber] = useState('');
-  const [endNumber, setEndNumber] = useState('');
+  const [iccidStart, setIccidStart] = useState('');
+  const [iccidEnd, setIccidEnd] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generatedBatch, setGeneratedBatch] = useState<ICCIDBatch | null>(null);
 
@@ -105,21 +103,20 @@ export default function ICCIDCalculatorPage() {
   const handleGenerateBatch = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!batchName || !baseIccid || !startNumber || !endNumber) {
+    if (!batchName || !iccidStart || !iccidEnd) {
       toast.error('Por favor complete todos los campos obligatorios');
       return;
     }
 
-    const start = parseInt(startNumber);
-    const end = parseInt(endNumber);
-
-    if (isNaN(start) || isNaN(end)) {
-      toast.error('Los números deben ser valores numéricos válidos');
+    // Validar que sean ICCIDs válidos (19-22 dígitos)
+    if (!iccidStart.match(/^\d{19,22}$/) || !iccidEnd.match(/^\d{19,22}$/)) {
+      toast.error('Los ICCIDs deben tener 19-22 dígitos numéricos');
       return;
     }
 
-    if (end < start) {
-      toast.error('El número final debe ser mayor o igual al inicial');
+    // Validar que tengan la misma longitud
+    if (iccidStart.length !== iccidEnd.length) {
+      toast.error('Los ICCIDs deben tener la misma longitud');
       return;
     }
 
@@ -130,9 +127,8 @@ export default function ICCIDCalculatorPage() {
       const response = await apiService.post('/api/v1/app8/iccid-calculator/batches/generate', {
         batch_name: batchName,
         description: description || undefined,
-        base_iccid: baseIccid,
-        start_number: start,
-        end_number: end
+        iccid_start: iccidStart,
+        iccid_end: iccidEnd
       });
 
       setGeneratedBatch(response.batch);
@@ -141,9 +137,8 @@ export default function ICCIDCalculatorPage() {
       // Reset form
       setBatchName('');
       setDescription('');
-      setBaseIccid('');
-      setStartNumber('');
-      setEndNumber('');
+      setIccidStart('');
+      setIccidEnd('');
     } catch (error: any) {
       console.error('Error generating batch:', error);
       toast.error(error.response?.data?.detail || 'Error al generar el lote');
@@ -338,50 +333,45 @@ export default function ICCIDCalculatorPage() {
                     </Form.Group>
 
                     <Form.Group className="mb-3">
-                      <Form.Label>ICCID Base (sin checksum) *</Form.Label>
+                      <Form.Label>ICCID Inicial (completo) *</Form.Label>
                       <Form.Control
                         type="text"
-                        value={baseIccid}
-                        onChange={(e) => setBaseIccid(e.target.value)}
-                        placeholder="Ej: 89882260"
+                        value={iccidStart}
+                        onChange={(e) => setIccidStart(e.target.value.trim())}
+                        placeholder="Ej: 89882390001334701795"
                         required
                       />
                       <Form.Text className="text-muted">
-                        Prefijo del ICCID (MII + Country Code + IIN). El checksum se calculará automáticamente.
+                        ICCID completo de inicio del rango (19-22 dígitos). Se recalculará el checksum.
                       </Form.Text>
                     </Form.Group>
 
-                    <Row>
-                      <Col>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Número Inicial *</Form.Label>
-                          <Form.Control
-                            type="number"
-                            value={startNumber}
-                            onChange={(e) => setStartNumber(e.target.value)}
-                            placeholder="1000000"
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Número Final *</Form.Label>
-                          <Form.Control
-                            type="number"
-                            value={endNumber}
-                            onChange={(e) => setEndNumber(e.target.value)}
-                            placeholder="1001000"
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
+                    <Form.Group className="mb-3">
+                      <Form.Label>ICCID Final (completo) *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={iccidEnd}
+                        onChange={(e) => setIccidEnd(e.target.value.trim())}
+                        placeholder="Ej: 89882390001334801785"
+                        required
+                      />
+                      <Form.Text className="text-muted">
+                        ICCID completo final del rango (19-22 dígitos). Debe tener la misma longitud que el inicial.
+                      </Form.Text>
+                    </Form.Group>
 
-                    {startNumber && endNumber && (
+                    {iccidStart && iccidEnd && iccidStart.length === iccidEnd.length && (
                       <Alert variant="info">
                         <i className="bi bi-info-circle me-2"></i>
-                        Se generarán {Math.max(0, parseInt(endNumber) - parseInt(startNumber) + 1)} ICCIDs
+                        Se generarán aproximadamente {(() => {
+                          try {
+                            const startBody = parseInt(iccidStart.slice(0, -1));
+                            const endBody = parseInt(iccidEnd.slice(0, -1));
+                            return Math.max(0, endBody - startBody + 1).toLocaleString();
+                          } catch {
+                            return '...';
+                          }
+                        })()} ICCIDs
                       </Alert>
                     )}
 
@@ -901,12 +891,12 @@ export default function ICCIDCalculatorPage() {
               <Table bordered size="sm" className="mb-4">
                 <tbody>
                   <tr>
-                    <th>ICCID Base:</th>
-                    <td><code>{selectedBatch.base_iccid}</code></td>
+                    <th>ICCID Inicial:</th>
+                    <td><code>{selectedBatch.iccid_start}</code></td>
                   </tr>
                   <tr>
-                    <th>Rango:</th>
-                    <td>{selectedBatch.start_number} - {selectedBatch.end_number}</td>
+                    <th>ICCID Final:</th>
+                    <td><code>{selectedBatch.iccid_end}</code></td>
                   </tr>
                   <tr>
                     <th>Total ICCIDs:</th>

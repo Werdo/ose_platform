@@ -80,6 +80,18 @@ _register_iin(IINProfile(
 ))
 
 _register_iin(IINProfile(
+    iin_prefix="898823",
+    brand="Vodafone IoT Global",
+    operator="Vodafone",
+    country="Global (código 88)",
+    region="Global",
+    use_case="IoT global / M2M",
+    core_network="2G/3G/4G/LTE-M/NB-IoT",
+    notes="Vodafone global M2M/IoT - variante 898823",
+    confidence="confirmed"
+))
+
+_register_iin(IINProfile(
     iin_prefix="898921",
     brand="KORE Wireless",
     operator="KORE",
@@ -94,6 +106,18 @@ _register_iin(IINProfile(
 # ──────────────────────────────────────────────────────────────────────────
 # IINs España
 # ──────────────────────────────────────────────────────────────────────────
+
+_register_iin(IINProfile(
+    iin_prefix="893401",
+    brand="Orange ES",
+    operator="Orange España",
+    country="España",
+    region="Europa",
+    use_case="Consumer / M2M",
+    core_network="2G/3G/4G/5G",
+    notes="Orange España - prefijo 893401",
+    confidence="confirmed"
+))
 
 _register_iin(IINProfile(
     iin_prefix="893407",

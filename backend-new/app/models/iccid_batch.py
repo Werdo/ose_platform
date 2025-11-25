@@ -69,9 +69,8 @@ class ICCIDBatch(Document):
     description: Optional[str] = Field(None, description="Descripción del lote")
 
     # Parámetros de generación
-    base_iccid: str = Field(..., description="ICCID base para generación")
-    start_number: int = Field(..., description="Número inicial")
-    end_number: int = Field(..., description="Número final")
+    iccid_start: str = Field(..., description="ICCID inicial del rango (completo)")
+    iccid_end: str = Field(..., description="ICCID final del rango (completo)")
     total_count: int = Field(..., description="Cantidad total de ICCIDs")
 
     # ICCIDs generados con análisis
@@ -103,7 +102,7 @@ class ICCIDBatch(Document):
             "batch_name",
             "created_by",
             "created_at",
-            "base_iccid",
+            "iccid_start",
         ]
 
     class Config:
@@ -111,9 +110,8 @@ class ICCIDBatch(Document):
             "example": {
                 "batch_name": "Lote IoT Enero 2025",
                 "description": "ICCIDs para dispositivos IoT desplegados en enero",
-                "base_iccid": "89882260",
-                "start_number": 1000000,
-                "end_number": 1001000,
+                "iccid_start": "89882260100000000001",
+                "iccid_end": "89882260100099900008",
                 "total_count": 1000,
                 "created_by": "ADMIN"
             }

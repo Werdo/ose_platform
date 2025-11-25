@@ -58,7 +58,7 @@ function ProtectedRoute({
   }
 
   // Check admin role
-  if (requiresAdmin && user?.role !== 'admin') {
+  if (requiresAdmin && user?.role !== 'admin' && user?.role !== 'super_admin') {
     return <Navigate to="/dashboard" replace />
   }
 

@@ -15,7 +15,7 @@ from app.models.employee import Employee
 from app.models.iccid_batch import ICCIDBatch
 from app.dependencies.auth import get_current_active_user
 from app.utils.iccid_analyzer import analyze_iccid, get_available_iin_profiles
-from app.utils.iccid_utils import generate_iccid_with_checksum
+from app.utils.iccid_utils import generate_iccid_range
 
 
 router = APIRouter(
@@ -32,18 +32,16 @@ class GenerateICCIDBatchRequest(BaseModel):
     """Request para generar un lote de ICCIDs"""
     batch_name: str = Field(..., description="Nombre del lote")
     description: Optional[str] = Field(None, description="Descripción")
-    base_iccid: str = Field(..., description="ICCID base (sin checksum)")
-    start_number: int = Field(..., description="Número inicial", ge=0)
-    end_number: int = Field(..., description="Número final", ge=0)
+    iccid_start: str = Field(..., description="ICCID inicial del rango (completo, 19-22 dígitos)")
+    iccid_end: str = Field(..., description="ICCID final del rango (completo, 19-22 dígitos)")
 
     class Config:
         json_schema_extra = {
             "example": {
                 "batch_name": "Lote IoT Enero 2025",
                 "description": "ICCIDs para dispositivos IoT",
-                "base_iccid": "89882260",
-                "start_number": 1000000,
-                "end_number": 1001000
+                "iccid_start": "89882390001334701795",
+                "iccid_end": "89882390001334801785"
             }
         }
 
@@ -65,25 +63,41 @@ async def generate_iccid_batch(
     """
     Genera un lote de ICCIDs con análisis completo.
 
-    - Genera ICCIDs secuenciales con checksum Luhn
+    - Genera ICCIDs secuenciales con checksum Luhn recalculado
     - Analiza cada ICCID (país, operador, validación)
     - Almacena en BD para historial
     - Calcula estadísticas del lote
     """
 
-    # Validar rangos
-    if request.end_number < request.start_number:
+    # Validar que los ICCIDs tengan la misma longitud
+    if len(request.iccid_start) != len(request.iccid_end):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El número final debe ser mayor o igual al inicial"
+            detail="Los ICCIDs deben tener la misma longitud"
         )
 
-    total_count = request.end_number - request.start_number + 1
+    # Validar longitud de ICCIDs (19-22 dígitos)
+    if not (19 <= len(request.iccid_start) <= 22):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Los ICCIDs deben tener entre 19 y 22 dígitos"
+        )
+
+    # Generar ICCIDs usando la función de rango (igual que App 2)
+    try:
+        iccid_range = generate_iccid_range(request.iccid_start, request.iccid_end)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    total_count = len(iccid_range)
 
     if total_count > 100000:  # Límite de 100k ICCIDs por lote
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Máximo 100,000 ICCIDs por lote"
+            detail=f"Máximo 100,000 ICCIDs por lote. Rango solicitado: {total_count:,} ICCIDs"
         )
 
     # Generar ICCIDs con análisis
@@ -96,13 +110,11 @@ async def generate_iccid_batch(
     valid_count = 0
     invalid_count = 0
 
-    for i in range(request.start_number, request.end_number + 1):
-        # Generar ICCID con checksum
-        iccid = generate_iccid_with_checksum(request.base_iccid, i)
-        iccids_list.append(iccid)
+    for iccid_full, body_str, check_digit in iccid_range:
+        iccids_list.append(iccid_full)
 
         # Analizar ICCID
-        analysis = analyze_iccid(iccid)
+        analysis = analyze_iccid(iccid_full)
         analyses_list.append(analysis)
 
         # Actualizar estadísticas
@@ -134,9 +146,8 @@ async def generate_iccid_batch(
     batch = ICCIDBatch(
         batch_name=request.batch_name,
         description=request.description,
-        base_iccid=request.base_iccid,
-        start_number=request.start_number,
-        end_number=request.end_number,
+        iccid_start=request.iccid_start,
+        iccid_end=request.iccid_end,
         total_count=total_count,
         iccids=iccids_list,
         analyses=analyses_list,
@@ -148,7 +159,7 @@ async def generate_iccid_batch(
 
     return {
         "success": True,
-        "message": f"Lote generado correctamente: {total_count} ICCIDs",
+        "message": f"Lote generado correctamente: {total_count:,} ICCIDs",
         "batch_id": str(batch.id),
         "batch_name": batch.batch_name,
         "total_count": total_count,
@@ -212,7 +223,8 @@ async def list_iccid_batches(
                 "_id": str(batch.id),
                 "batch_name": batch.batch_name,
                 "description": batch.description,
-                "base_iccid": batch.base_iccid,
+                "iccid_start": batch.iccid_start,
+                "iccid_end": batch.iccid_end,
                 "total_count": batch.total_count,
                 "stats": batch.stats,
                 "created_by": batch.created_by,
@@ -250,9 +262,8 @@ async def get_iccid_batch_details(
             "_id": str(batch.id),
             "batch_name": batch.batch_name,
             "description": batch.description,
-            "base_iccid": batch.base_iccid,
-            "start_number": batch.start_number,
-            "end_number": batch.end_number,
+            "iccid_start": batch.iccid_start,
+            "iccid_end": batch.iccid_end,
             "total_count": batch.total_count,
             "iccids": batch.iccids,
             "analyses": batch.analyses,

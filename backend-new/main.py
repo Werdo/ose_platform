@@ -12,7 +12,7 @@ import logging
 from app.config import settings
 from app.database import init_db, close_db, check_database_health
 from app.routers import auth, app1_notify, app2_import, app3_rma, app4_transform, public_auth, public_tickets
-from app.routers import app5_invoice, app6_picking, app8_iccid_calculator, system_logs, brand_update, employees
+from app.routers import app5_invoice, app6_picking, app8_iccid_calculator, system_logs, brand_update, employees, client_users
 
 # Configurar logging
 logging.basicConfig(
@@ -97,6 +97,10 @@ app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 
 # Employee Management (super_admin only)
 app.include_router(employees.router, prefix=settings.API_V1_PREFIX)
+
+# Client Users Management (admin only)
+app.include_router(client_users.router, prefix=settings.API_V1_PREFIX)
+logger.info("✓ Client Users Management enabled")
 
 # App 1: Notificación de Series
 if settings.FEATURE_APP1_ENABLED:
