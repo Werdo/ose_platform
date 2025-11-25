@@ -21,6 +21,7 @@ export type EmployeeRole = 'super_admin' | 'admin' | 'operator' | 'supervisor' |
 export type EmployeeStatus = 'active' | 'inactive' | 'suspended'
 
 export interface UserPermissions {
+  [key: string]: boolean | undefined
   production_line1_station1?: boolean
   production_line1_station2?: boolean
   production_line2_station1?: boolean
