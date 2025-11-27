@@ -23,9 +23,12 @@ import { es } from 'date-fns/locale'
 export default function SeriesNotificationPage() {
   // State for Step 1: Input
   const [inputText, setInputText] = useState('')
+  const [inputType, setInputType] = useState<'imeis' | 'pallets' | 'cartons'>('imeis')
   const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [csvType, setCsvType] = useState<'imeis' | 'pallets' | 'cartons'>('imeis')
   const [parsedSerials, setParsedSerials] = useState<DeviceSerial[]>([])
   const [parseErrors, setParseErrors] = useState<{ input: string; error: string }[]>([])
+  const [isProcessingInput, setIsProcessingInput] = useState(false)
 
   // State for Smart Scan
   const [scanCode, setScanCode] = useState('')
@@ -55,6 +58,9 @@ export default function SeriesNotificationPage() {
   const [historyLoading, setHistoryLoading] = useState(false)
   const [showHistoryDetail, setShowHistoryDetail] = useState(false)
   const [selectedHistory, setSelectedHistory] = useState<NotificationHistoryItem | null>(null)
+  const [searchEmail, setSearchEmail] = useState('')
+  const [searchCustomer, setSearchCustomer] = useState('')
+  const [searchLocation, setSearchLocation] = useState('')
 
   // Current tab
   const [activeTab, setActiveTab] = useState<string>('input')
@@ -74,7 +80,13 @@ export default function SeriesNotificationPage() {
   const loadHistory = async () => {
     setHistoryLoading(true)
     try {
-      const data = await seriesNotificationService.getHistory()
+      const data = await seriesNotificationService.getHistory(
+        1,
+        20,
+        searchEmail || undefined,
+        searchCustomer || undefined,
+        searchLocation || undefined
+      )
       setHistory(data.items)
     } catch (error) {
       toast.error('Error al cargar historial')
@@ -83,24 +95,140 @@ export default function SeriesNotificationPage() {
     }
   }
 
+  const handleRepeatNotification = (item: NotificationHistoryItem) => {
+    // Load the history item data into the form
+    setParsedSerials(item.serials)
+    setValidatedSerials(item.serials)
+    setLocation(item.location)
+    setCsvFormat(item.csv_format)
+    setEmailTo(item.email_to)
+    setNotes(item.notes || '')
+
+    // Switch to send tab
+    setActiveTab('send')
+
+    toast.success('Notificación cargada. Puedes modificar los datos antes de enviar.')
+  }
+
   // Handle manual input parse
-  const handleParseInput = () => {
+  const handleParseInput = async () => {
     if (!inputText.trim()) {
-      toast.error('Introduce al menos un número de serie')
+      toast.error('Introduce al menos un código')
       return
     }
 
-    const result = seriesNotificationService.parseInput(inputText)
-    setParsedSerials(result.valid)
-    setParseErrors(result.invalid)
+    if (inputType === 'imeis') {
+      // Comportamiento original: parsear IMEIs/ICCIDs
+      const result = seriesNotificationService.parseInput(inputText)
+      setParsedSerials(result.valid)
+      setParseErrors(result.invalid)
 
-    if (result.valid.length > 0) {
-      toast.success(`${result.valid.length} serie(s) parseada(s) correctamente`)
-      setActiveTab('validate')
-    }
+      if (result.valid.length > 0) {
+        toast.success(`${result.valid.length} serie(s) parseada(s) correctamente`)
+        setActiveTab('validate')
+      }
 
-    if (result.invalid.length > 0) {
-      toast.error(`${result.invalid.length} línea(s) con errores`)
+      if (result.invalid.length > 0) {
+        toast.error(`${result.invalid.length} línea(s) con errores`)
+      }
+    } else if (inputType === 'pallets') {
+      // Procesar como lista de pallets
+      setIsProcessingInput(true)
+      toast('Buscando dispositivos por pallets...', { icon: 'ℹ️' })
+
+      try {
+        const palletCodes = inputText
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line && !line.startsWith('#') && line.length > 0)
+
+        let allSerials: DeviceSerial[] = []
+        let processedCount = 0
+        let errorCount = 0
+
+        for (const palletId of palletCodes) {
+          try {
+            const result = await seriesNotificationService.searchByPallet(palletId)
+            if (result.success && result.serials.length > 0) {
+              allSerials = [...allSerials, ...result.serials.map(s => ({
+                imei: s.imei || '',
+                iccid: s.iccid || '',
+                package_no: s.package_no || ''
+              }))]
+              processedCount++
+            } else {
+              errorCount++
+            }
+          } catch (error) {
+            errorCount++
+          }
+        }
+
+        setParsedSerials(allSerials)
+        setParseErrors([])
+        toast.success(`${processedCount} pallet(s) procesado(s): ${allSerials.length} dispositivos encontrados`)
+
+        if (errorCount > 0) {
+          toast(`${errorCount} pallet(s) no encontrados`, { icon: '⚠️' })
+        }
+
+        if (allSerials.length > 0) {
+          setActiveTab('validate')
+        }
+      } catch (error) {
+        toast.error('Error procesando pallets')
+      } finally {
+        setIsProcessingInput(false)
+      }
+    } else if (inputType === 'cartons') {
+      // Procesar como lista de cartones
+      setIsProcessingInput(true)
+      toast('Buscando dispositivos por cartones...', { icon: 'ℹ️' })
+
+      try {
+        const cartonCodes = inputText
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line && !line.startsWith('#') && line.length > 0)
+
+        let allSerials: DeviceSerial[] = []
+        let processedCount = 0
+        let errorCount = 0
+
+        for (const cartonId of cartonCodes) {
+          try {
+            const result = await seriesNotificationService.searchByCarton(cartonId)
+            if (result.success && result.serials.length > 0) {
+              allSerials = [...allSerials, ...result.serials.map(s => ({
+                imei: s.imei || '',
+                iccid: s.iccid || '',
+                package_no: s.package_no || ''
+              }))]
+              processedCount++
+            } else {
+              errorCount++
+            }
+          } catch (error) {
+            errorCount++
+          }
+        }
+
+        setParsedSerials(allSerials)
+        setParseErrors([])
+        toast.success(`${processedCount} cartón(es) procesado(s): ${allSerials.length} dispositivos encontrados`)
+
+        if (errorCount > 0) {
+          toast(`${errorCount} cartón(es) no encontrados`, { icon: '⚠️' })
+        }
+
+        if (allSerials.length > 0) {
+          setActiveTab('validate')
+        }
+      } catch (error) {
+        toast.error('Error procesando cartones')
+      } finally {
+        setIsProcessingInput(false)
+      }
     }
   }
 
@@ -112,15 +240,107 @@ export default function SeriesNotificationPage() {
     setCsvFile(file)
 
     const reader = new FileReader()
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string
-      const result = seriesNotificationService.parseCSV(content)
-      setParsedSerials(result.valid)
-      setParseErrors(result.invalid)
 
-      if (result.valid.length > 0) {
-        toast.success(`${result.valid.length} serie(s) cargada(s) desde CSV`)
-        setActiveTab('validate')
+      if (csvType === 'imeis') {
+        // Procesar como IMEIs individuales (comportamiento original)
+        const result = seriesNotificationService.parseCSV(content)
+        setParsedSerials(result.valid)
+        setParseErrors(result.invalid)
+
+        if (result.valid.length > 0) {
+          toast.success(`${result.valid.length} serie(s) cargada(s) desde CSV`)
+          setActiveTab('validate')
+        }
+      } else if (csvType === 'pallets') {
+        // Procesar como lista de pallets
+        toast('Buscando dispositivos por pallets...', { icon: 'ℹ️' })
+        try {
+          const palletCodes = content
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#') && line.length > 0)
+
+          let allSerials: DeviceSerial[] = []
+          let processedCount = 0
+          let errorCount = 0
+
+          for (const palletId of palletCodes) {
+            try {
+              const result = await seriesNotificationService.searchByPallet(palletId)
+              if (result.success && result.serials.length > 0) {
+                allSerials = [...allSerials, ...result.serials.map(s => ({
+                  imei: s.imei || '',
+                  iccid: s.iccid || '',
+                  package_no: s.package_no || ''
+                }))]
+                processedCount++
+              } else {
+                errorCount++
+              }
+            } catch (error) {
+              errorCount++
+            }
+          }
+
+          setParsedSerials(allSerials)
+          toast.success(`${processedCount} pallet(s) procesado(s): ${allSerials.length} dispositivos encontrados`)
+
+          if (errorCount > 0) {
+            toast(`${errorCount} pallet(s) no encontrados`, { icon: '⚠️' })
+          }
+
+          if (allSerials.length > 0) {
+            setActiveTab('validate')
+          }
+        } catch (error) {
+          toast.error('Error procesando archivo de pallets')
+        }
+      } else if (csvType === 'cartons') {
+        // Procesar como lista de cartones
+        toast('Buscando dispositivos por cartones...', { icon: 'ℹ️' })
+        try {
+          const cartonCodes = content
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#') && line.length > 0)
+
+          let allSerials: DeviceSerial[] = []
+          let processedCount = 0
+          let errorCount = 0
+
+          for (const cartonId of cartonCodes) {
+            try {
+              const result = await seriesNotificationService.searchByCarton(cartonId)
+              if (result.success && result.serials.length > 0) {
+                allSerials = [...allSerials, ...result.serials.map(s => ({
+                  imei: s.imei || '',
+                  iccid: s.iccid || '',
+                  package_no: s.package_no || ''
+                }))]
+                processedCount++
+              } else {
+                errorCount++
+              }
+            } catch (error) {
+              errorCount++
+            }
+          }
+
+          setParsedSerials(allSerials)
+          toast.success(`${processedCount} cartón(es) procesado(s): ${allSerials.length} dispositivos encontrados`)
+
+          if (errorCount > 0) {
+            toast(`${errorCount} cartón(es) no encontrados`, { icon: '⚠️' })
+          }
+
+          if (allSerials.length > 0) {
+            setActiveTab('validate')
+          }
+        } catch (error) {
+          toast.error('Error procesando archivo de cartones')
+        }
       }
     }
     reader.readAsText(file)
@@ -286,7 +506,9 @@ export default function SeriesNotificationPage() {
   // Reset form
   const handleReset = () => {
     setInputText('')
+    setInputType('imeis')
     setCsvFile(null)
+    setCsvType('imeis')
     setParsedSerials([])
     setParseErrors([])
     setValidationResult(null)
@@ -297,6 +519,7 @@ export default function SeriesNotificationPage() {
     setEmailCC('')
     setNotes('')
     setCsvPreview('')
+    setIsProcessingInput(false)
     setActiveTab('input')
   }
 
@@ -365,30 +588,100 @@ export default function SeriesNotificationPage() {
               <Tab.Pane eventKey="input">
                 <h4 className="mb-3">Introducir Números de Serie</h4>
                 <p className="text-muted">
-                  Introduce IMEI, ICCID, o números de paquete (package_no). Un número por línea o separados por espacios.
+                  Introduce los códigos manualmente según el tipo seleccionado. Un código por línea.
                 </p>
 
                 <Form.Group className="mb-4">
-                  <Form.Label>Entrada Manual</Form.Label>
+                  <Form.Label className="fw-bold">Entrada Manual</Form.Label>
+
+                  <div className="mb-3">
+                    <Form.Label className="d-block mb-2">Tipo de datos a introducir:</Form.Label>
+                    <div className="d-flex gap-4">
+                      <Form.Check
+                        type="radio"
+                        id="input-type-imeis"
+                        label={
+                          <span>
+                            <i className="bi bi-phone me-1"></i>
+                            <strong>IMEIs/ICCIDs individuales</strong>
+                            <div className="small text-muted">Un IMEI o ICCID por línea</div>
+                          </span>
+                        }
+                        name="inputType"
+                        value="imeis"
+                        checked={inputType === 'imeis'}
+                        onChange={(e) => setInputType(e.target.value as any)}
+                      />
+                      <Form.Check
+                        type="radio"
+                        id="input-type-pallets"
+                        label={
+                          <span>
+                            <i className="bi bi-box-seam me-1"></i>
+                            <strong>Lista de Pallets</strong>
+                            <div className="small text-muted">Un código de pallet por línea</div>
+                          </span>
+                        }
+                        name="inputType"
+                        value="pallets"
+                        checked={inputType === 'pallets'}
+                        onChange={(e) => setInputType(e.target.value as any)}
+                      />
+                      <Form.Check
+                        type="radio"
+                        id="input-type-cartons"
+                        label={
+                          <span>
+                            <i className="bi bi-inbox me-1"></i>
+                            <strong>Lista de Cartones</strong>
+                            <div className="small text-muted">Un código de cartón por línea</div>
+                          </span>
+                        }
+                        name="inputType"
+                        value="cartons"
+                        checked={inputType === 'cartons'}
+                        onChange={(e) => setInputType(e.target.value as any)}
+                      />
+                    </div>
+                  </div>
+
                   <Form.Control
                     as="textarea"
                     rows={10}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    placeholder={`Ejemplos válidos:\n861888082667623\n89882390001210884632\n861888082667623 89882390001210884632\n9912182508200007739500205`}
+                    placeholder={
+                      inputType === 'imeis'
+                        ? `Ejemplos válidos:\n861888082667623\n89882390001210884632\n861888082667623 89882390001210884632\n9912182508200007739500205`
+                        : inputType === 'pallets'
+                        ? `Un código de pallet por línea:\nT9121800077396002\nT9121800077396003\nT9121800077396004`
+                        : `Un código de cartón por línea:\n9912182508200007739500205\n9912182508200007739500206\n9912182508200007739500207`
+                    }
                     style={{ fontFamily: 'monospace' }}
+                    disabled={isProcessingInput}
                   />
                   <Form.Text className="text-muted">
-                    Formatos: IMEI (15 dígitos), ICCID (19-20 dígitos), Package No (25 dígitos empezando con 99)
+                    {inputType === 'imeis' && 'Formatos: IMEI (15 dígitos), ICCID (19-20 dígitos), Package No (25 dígitos empezando con 99)'}
+                    {inputType === 'pallets' && 'Introduce los códigos de pallet, uno por línea. El sistema buscará todos los dispositivos de cada pallet.'}
+                    {inputType === 'cartons' && 'Introduce los códigos de cartón (package_no), uno por línea. El sistema buscará todos los dispositivos de cada cartón.'}
                   </Form.Text>
                 </Form.Group>
 
                 <div className="d-flex gap-2 mb-4">
-                  <Button variant="primary" onClick={handleParseInput} disabled={!inputText.trim()}>
-                    <i className="bi bi-arrow-right-circle me-1"></i>
-                    Parsear y Continuar
+                  <Button variant="primary" onClick={handleParseInput} disabled={!inputText.trim() || isProcessingInput}>
+                    {isProcessingInput ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-arrow-right-circle me-1"></i>
+                        {inputType === 'imeis' ? 'Parsear y Continuar' : 'Buscar y Continuar'}
+                      </>
+                    )}
                   </Button>
-                  <Button variant="outline-secondary" onClick={() => setInputText('')}>
+                  <Button variant="outline-secondary" onClick={() => setInputText('')} disabled={isProcessingInput}>
                     <i className="bi bi-x-circle me-1"></i>
                     Limpiar
                   </Button>
@@ -462,11 +755,65 @@ export default function SeriesNotificationPage() {
 
                 <hr className="my-4" />
 
-                <Form.Group>
-                  <Form.Label>O Cargar desde CSV</Form.Label>
+                <Form.Group className="mb-4">
+                  <Form.Label className="fw-bold">O Cargar desde CSV/TXT</Form.Label>
+
+                  <div className="mb-3">
+                    <Form.Label className="d-block mb-2">Tipo de contenido del archivo:</Form.Label>
+                    <div className="d-flex gap-4">
+                      <Form.Check
+                        type="radio"
+                        id="csv-type-imeis"
+                        label={
+                          <span>
+                            <i className="bi bi-phone me-1"></i>
+                            <strong>IMEIs/ICCIDs individuales</strong>
+                            <div className="small text-muted">Un IMEI o ICCID por línea</div>
+                          </span>
+                        }
+                        name="csvType"
+                        value="imeis"
+                        checked={csvType === 'imeis'}
+                        onChange={(e) => setCsvType(e.target.value as any)}
+                      />
+                      <Form.Check
+                        type="radio"
+                        id="csv-type-pallets"
+                        label={
+                          <span>
+                            <i className="bi bi-box-seam me-1"></i>
+                            <strong>Lista de Pallets</strong>
+                            <div className="small text-muted">Un código de pallet por línea</div>
+                          </span>
+                        }
+                        name="csvType"
+                        value="pallets"
+                        checked={csvType === 'pallets'}
+                        onChange={(e) => setCsvType(e.target.value as any)}
+                      />
+                      <Form.Check
+                        type="radio"
+                        id="csv-type-cartons"
+                        label={
+                          <span>
+                            <i className="bi bi-inbox me-1"></i>
+                            <strong>Lista de Cartones</strong>
+                            <div className="small text-muted">Un código de cartón por línea</div>
+                          </span>
+                        }
+                        name="csvType"
+                        value="cartons"
+                        checked={csvType === 'cartons'}
+                        onChange={(e) => setCsvType(e.target.value as any)}
+                      />
+                    </div>
+                  </div>
+
                   <Form.Control type="file" accept=".csv,.txt" onChange={handleCSVUpload} />
                   <Form.Text className="text-muted">
-                    El archivo puede contener una columna con IMEI, ICCID o ambos separados por espacio
+                    {csvType === 'imeis' && 'El archivo puede contener una columna con IMEI, ICCID o ambos separados por espacio'}
+                    {csvType === 'pallets' && 'El archivo debe contener un código de pallet por línea (ej: T9121800077396002)'}
+                    {csvType === 'cartons' && 'El archivo debe contener un código de cartón (package_no) por línea'}
                   </Form.Text>
                 </Form.Group>
 
@@ -643,6 +990,10 @@ export default function SeriesNotificationPage() {
                         <option value="unified">📝 Simplificado - Una columna (IMEI ICCID)</option>
                         <option value="detailed">📊 Detallado - Incluye marca y referencia</option>
                         <option value="compact">🗜️ Compacto - Solo IMEIs</option>
+                        <option value="logistica-trazable">📦 Logística Trazable - IMEI, ICCID, Marca, Operador, Caja Master, Pallet</option>
+                        <option value="imei-marca">🏷️ IMEI-Marca - IMEI, Marca</option>
+                        <option value="inspide">🔍 Inspide - IMEI, ICCID</option>
+                        <option value="clientes-genericos">👥 Clientes Genéricos - IMEI, Marca, Número de Orden</option>
                       </Form.Select>
                       <Form.Text className="text-muted">
                         Selecciona el formato de archivo que recibirá el destinatario
@@ -705,7 +1056,12 @@ export default function SeriesNotificationPage() {
                     csvFormat === 'separated' ? '📋 Estándar - Dos columnas (IMEI | ICCID)' :
                     csvFormat === 'unified' ? '📝 Simplificado - Una columna (IMEI ICCID)' :
                     csvFormat === 'detailed' ? '📊 Detallado - Incluye marca y referencia' :
-                    '🗜️ Compacto - Solo IMEIs'
+                    csvFormat === 'compact' ? '🗜️ Compacto - Solo IMEIs' :
+                    csvFormat === 'logistica-trazable' ? '📦 Logística Trazable - IMEI, ICCID, Marca, Operador, Caja Master, Pallet' :
+                    csvFormat === 'imei-marca' ? '🏷️ IMEI-Marca - IMEI, Marca' :
+                    csvFormat === 'inspide' ? '🔍 Inspide - IMEI, ICCID' :
+                    csvFormat === 'clientes-genericos' ? '👥 Clientes Genéricos - IMEI, Marca, Número de Orden' :
+                    csvFormat
                   }
                 </Alert>
 
@@ -748,6 +1104,65 @@ export default function SeriesNotificationPage() {
                   </Button>
                 </div>
 
+                {/* Search Filters */}
+                <Card className="mb-3">
+                  <Card.Body>
+                    <Row>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>Buscar por Email</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="ejemplo@email.com"
+                            value={searchEmail}
+                            onChange={(e) => setSearchEmail(e.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>Buscar por Cliente</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Nombre del cliente"
+                            value={searchCustomer}
+                            onChange={(e) => setSearchCustomer(e.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>Buscar por Lote/Ubicación</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="ALB-123..."
+                            value={searchLocation}
+                            onChange={(e) => setSearchLocation(e.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <div className="mt-3">
+                      <Button variant="primary" size="sm" onClick={loadHistory} className="me-2">
+                        <i className="bi bi-search me-1"></i>
+                        Buscar
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => {
+                          setSearchEmail('')
+                          setSearchCustomer('')
+                          setSearchLocation('')
+                        }}
+                      >
+                        <i className="bi bi-x-circle me-1"></i>
+                        Limpiar
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+
                 {historyLoading ? (
                   <div className="text-center py-5">
                     <Spinner animation="border" variant="primary" />
@@ -761,11 +1176,12 @@ export default function SeriesNotificationPage() {
                         <tr>
                           <th>Fecha</th>
                           <th>Cliente</th>
+                          <th>Lote</th>
                           <th>Dispositivos</th>
                           <th>Formato</th>
                           <th>Email</th>
                           <th>Operador</th>
-                          <th>Archivo</th>
+                          <th>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -774,15 +1190,42 @@ export default function SeriesNotificationPage() {
                             <td>{format(new Date(item.date), 'dd/MM/yyyy HH:mm', { locale: es })}</td>
                             <td>{item.customer_name}</td>
                             <td>
+                              <small><code>{item.location}</code></small>
+                            </td>
+                            <td>
                               <Badge bg="primary">{item.device_count}</Badge>
                             </td>
-                            <td>{item.csv_format === 'separated' ? 'Separado' : 'Unificado'}</td>
+                            <td>
+                              <small>
+                                {
+                                  item.csv_format === 'separated' ? 'Estándar' :
+                                  item.csv_format === 'unified' ? 'Simplificado' :
+                                  item.csv_format === 'detailed' ? 'Detallado' :
+                                  item.csv_format === 'compact' ? 'Compacto' :
+                                  item.csv_format === 'logistica-trazable' ? 'Logística' :
+                                  item.csv_format === 'imei-marca' ? 'IMEI-Marca' :
+                                  item.csv_format === 'inspide' ? 'Inspide' :
+                                  item.csv_format === 'clientes-genericos' ? 'Genéricos' :
+                                  item.csv_format
+                                }
+                              </small>
+                            </td>
                             <td>
                               <small>{item.email_to}</small>
                             </td>
-                            <td>{item.operator}</td>
                             <td>
-                              <code className="small">{item.csv_filename}</code>
+                              <small>{item.operator}</small>
+                            </td>
+                            <td>
+                              <Button
+                                variant="outline-success"
+                                size="sm"
+                                onClick={() => handleRepeatNotification(item)}
+                                title="Repetir esta notificación"
+                              >
+                                <i className="bi bi-arrow-repeat me-1"></i>
+                                Repetir
+                              </Button>
                             </td>
                           </tr>
                         ))}

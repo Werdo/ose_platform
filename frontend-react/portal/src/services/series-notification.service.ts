@@ -119,6 +119,7 @@ const seriesNotificationService = {
         invalidos: number
         resultados: Array<{
           imei: string
+          iccid?: string
           valido: boolean
           existe: boolean
           notificado: boolean
@@ -129,6 +130,11 @@ const seriesNotificationService = {
           estado?: string
           cliente?: string
           cliente_nombre?: string
+          operador?: string
+          caja_master?: string
+          pallet_id?: string
+          package_no?: string
+          order_number?: string
         }>
       }
 
@@ -146,8 +152,15 @@ const seriesNotificationService = {
         results: backendResponse.resultados.map(r => ({
           serial: {
             imei: r.imei,
-            iccid: '',
-            package_no: ''
+            iccid: r.iccid || '',
+            package_no: r.package_no || '',
+            device_id: r.device_id,
+            marca: r.marca,
+            nro_referencia: r.nro_referencia,
+            operador: r.operador,
+            caja_master: r.caja_master,
+            pallet_id: r.pallet_id,
+            order_number: r.order_number || r.nro_referencia
           },
           valid: r.valido,
           exists: r.existe,
@@ -227,6 +240,34 @@ const seriesNotificationService = {
         csv += `${serial.imei || ''}\n`
       }
       return csv
+    } else if (format === 'logistica-trazable') {
+      // 📦 Logística Trazable - IMEI, ICCID, Marca, Operador, Caja Master, Pallet
+      let csv = 'IMEI,ICCID,Marca,Operador,Caja Master,Pallet\n'
+      for (const serial of serials) {
+        csv += `${serial.imei || ''},${serial.iccid || ''},${serial.marca || ''},${serial.operador || ''},${serial.caja_master || ''},${serial.pallet_id || ''}\n`
+      }
+      return csv
+    } else if (format === 'imei-marca') {
+      // 🏷️ IMEI-Marca - IMEI, Marca
+      let csv = 'IMEI,Marca\n'
+      for (const serial of serials) {
+        csv += `${serial.imei || ''},${serial.marca || ''}\n`
+      }
+      return csv
+    } else if (format === 'inspide') {
+      // 🔍 Inspide - IMEI, ICCID (similar a separated pero con nombre diferente)
+      let csv = 'IMEI,ICCID\n'
+      for (const serial of serials) {
+        csv += `${serial.imei || ''},${serial.iccid || ''}\n`
+      }
+      return csv
+    } else if (format === 'clientes-genericos') {
+      // 👥 Clientes Genéricos - IMEI, Marca, Número de Orden
+      let csv = 'IMEI,Marca,Número de Orden\n'
+      for (const serial of serials) {
+        csv += `${serial.imei || ''},${serial.marca || ''},${serial.order_number || serial.nro_referencia || ''}\n`
+      }
+      return csv
     }
     // Default fallback to separated format
     return seriesNotificationService.generateCSV(serials, 'separated')
@@ -251,18 +292,30 @@ const seriesNotificationService = {
   /**
    * Get notification history
    */
-  getHistory: async (page: number = 1, limit: number = 20): Promise<{
+  getHistory: async (
+    page: number = 1,
+    limit: number = 20,
+    searchEmail?: string,
+    searchCustomer?: string,
+    searchLocation?: string
+  ): Promise<{
     items: NotificationHistoryItem[]
     total: number
     pages: number
   }> => {
     try {
+      const params: any = { page, limit }
+
+      if (searchEmail) params.search_email = searchEmail
+      if (searchCustomer) params.search_customer = searchCustomer
+      if (searchLocation) params.search_location = searchLocation
+
       const response = await apiService.get<{
         items: NotificationHistoryItem[]
         total: number
         pages: number
       }>('/api/v1/series-notifications/history', {
-        params: { page, limit }
+        params
       })
       return response
     } catch (error) {

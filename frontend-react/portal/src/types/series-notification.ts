@@ -12,10 +12,17 @@ export interface DeviceSerial {
   exists?: boolean
   already_notified?: boolean
   error?: string
+  // Campos adicionales para plantillas
+  marca?: string
+  operador?: string
+  caja_master?: string
+  pallet_id?: string
+  order_number?: string
+  nro_referencia?: string
 }
 
 // CSV Format Options
-export type CSVFormat = 'separated' | 'unified' | 'detailed' | 'compact'
+export type CSVFormat = 'separated' | 'unified' | 'detailed' | 'compact' | 'logistica-trazable' | 'imei-marca' | 'inspide' | 'clientes-genericos'
 
 // Notification Request
 export interface SeriesNotificationRequest {
@@ -54,6 +61,7 @@ export interface NotificationHistoryItem {
   csv_filename: string
   notes?: string
   serials: DeviceSerial[]
+  location: string
 }
 
 // Device from Backend

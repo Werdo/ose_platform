@@ -1,12 +1,17 @@
 """
 OSE Platform - App 1: Notificación de Series
 Router para notificación de dispositivos a clientes
+Incluye exportación por lotes de pallets
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from datetime import datetime
 import logging
+import csv
+import io
+import pandas as pd
 
 from app.schemas.app1 import (
     NotificarSeriesRequest,
@@ -591,6 +596,38 @@ async def send_notification(
         for serial in request.serials:
             csv_content += f"{serial.imei}\n"
 
+    elif request.csv_format == "logistica-trazable":
+        # Logística Trazable - IMEI, ICCID, Marca, Operador, Caja Master, Pallet
+        csv_content = "IMEI,ICCID,Marca,Operador,Caja Master,Pallet\n"
+        for serial in request.serials:
+            # Fetch additional data from device if needed
+            marca = getattr(serial, 'marca', '') or ''
+            operador = getattr(serial, 'operador', '') or ''
+            caja_master = getattr(serial, 'caja_master', '') or ''
+            pallet_id = getattr(serial, 'pallet_id', '') or ''
+            csv_content += f"{serial.imei},{serial.iccid or ''},{marca},{operador},{caja_master},{pallet_id}\n"
+
+    elif request.csv_format == "imei-marca":
+        # IMEI-Marca - IMEI, Marca
+        csv_content = "IMEI,Marca\n"
+        for serial in request.serials:
+            marca = getattr(serial, 'marca', '') or ''
+            csv_content += f"{serial.imei},{marca}\n"
+
+    elif request.csv_format == "inspide":
+        # Inspide - IMEI, ICCID (similar a separated pero con nombre específico)
+        csv_content = "IMEI,ICCID\n"
+        for serial in request.serials:
+            csv_content += f"{serial.imei},{serial.iccid or ''}\n"
+
+    elif request.csv_format == "clientes-genericos":
+        # Clientes Genéricos - IMEI, Marca, Número de Orden
+        csv_content = "IMEI,Marca,Número de Orden\n"
+        for serial in request.serials:
+            marca = getattr(serial, 'marca', '') or ''
+            order_number = getattr(serial, 'order_number', '') or getattr(serial, 'nro_referencia', '') or ''
+            csv_content += f"{serial.imei},{marca},{order_number}\n"
+
     else:
         # Formato por defecto
         csv_content = "IMEI,ICCID\n"
@@ -836,24 +873,43 @@ Este es un email automático generado por {settings.APP_NAME}
 async def get_history(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
+    search_email: Optional[str] = Query(None, description="Buscar por email"),
+    search_customer: Optional[str] = Query(None, description="Buscar por nombre de cliente"),
+    search_location: Optional[str] = Query(None, description="Buscar por ubicación/lote"),
     current_user: Employee = Depends(get_current_active_user)
 ):
     """
     Obtener historial de notificaciones desde la base de datos
+
+    Soporta búsqueda por:
+    - Email (destinatario)
+    - Nombre de cliente
+    - Ubicación/Lote
     """
     try:
         # Calcular skip
         skip = (page - 1) * limit
 
-        # Obtener total de registros
-        total = await SeriesNotification.count()
+        # Construir filtros de búsqueda
+        filters = {}
+
+        if search_email:
+            # Búsqueda case-insensitive en email
+            filters["email_to"] = {"$regex": search_email, "$options": "i"}
+
+        if search_customer:
+            # Búsqueda case-insensitive en nombre de cliente
+            filters["customer_name"] = {"$regex": search_customer, "$options": "i"}
+
+        if search_location:
+            # Búsqueda case-insensitive en ubicación/lote
+            filters["location"] = {"$regex": search_location, "$options": "i"}
+
+        # Obtener total de registros con filtros
+        total = await SeriesNotification.find(filters).count()
 
         # Obtener registros paginados, ordenados por fecha descendente
-        notifications = await SeriesNotification.find_all(
-            skip=skip,
-            limit=limit,
-            sort=[("fecha", -1)]  # Más recientes primero
-        ).to_list()
+        notifications = await SeriesNotification.find(filters).sort([("fecha", -1)]).skip(skip).limit(limit).to_list()
 
         # Transformar a formato del frontend
         items = []
@@ -870,7 +926,8 @@ async def get_history(
                 "operator_email": notif.operator_email,
                 "csv_filename": notif.csv_filename,
                 "notes": notif.notes,
-                "serials": notif.serials
+                "serials": notif.serials,
+                "location": notif.location
             })
 
         # Calcular páginas
@@ -1208,6 +1265,119 @@ async def smart_scan_code(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error procesando código: {str(e)}"
+        )
+
+
+@router.post("/export-by-pallets")
+async def export_devices_by_pallets(
+    file: UploadFile = File(..., description="Archivo con lista de pallets (txt, csv, o xlsx)"),
+    current_user: Employee = Depends(get_current_active_user)
+):
+    """
+    Exportar CSV con dispositivos de múltiples pallets
+
+    Acepta un archivo con lista de códigos de pallet y genera un CSV con:
+    - IMEI
+    - ICCID
+    - MARCA
+    - OPERADOR
+    - NUMERO_PALET
+
+    El archivo de entrada puede ser:
+    - TXT: un pallet por línea
+    - CSV: primera columna con pallets
+    - XLSX: primera columna con pallets
+    """
+    try:
+        logger.info(f"Usuario {current_user.username} exportando dispositivos por lote de pallets")
+
+        # Leer archivo
+        content = await file.read()
+        pallet_codes = []
+
+        # Detectar tipo de archivo y extraer pallets
+        filename = file.filename.lower()
+
+        if filename.endswith('.txt'):
+            # Archivo TXT: un pallet por línea
+            lines = content.decode('utf-8').split('\n')
+            pallet_codes = [line.strip() for line in lines if line.strip()]
+
+        elif filename.endswith('.csv'):
+            # Archivo CSV: primera columna
+            lines = content.decode('utf-8').split('\n')
+            for line in lines:
+                if line.strip():
+                    parts = line.split(',')
+                    if parts[0].strip():
+                        pallet_codes.append(parts[0].strip())
+
+        elif filename.endswith(('.xlsx', '.xls')):
+            # Archivo Excel: primera columna
+            df = pd.read_excel(io.BytesIO(content))
+            pallet_codes = df.iloc[:, 0].dropna().astype(str).str.strip().tolist()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de archivo no soportado. Use .txt, .csv o .xlsx"
+            )
+
+        if not pallet_codes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se encontraron códigos de pallet en el archivo"
+            )
+
+        logger.info(f"Se leyeron {len(pallet_codes)} códigos de pallet del archivo")
+
+        # Buscar dispositivos con esos pallets
+        devices = await Device.find(
+            {"pallet_id": {"$in": pallet_codes}}
+        ).to_list()
+
+        if not devices:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No se encontraron dispositivos para los {len(pallet_codes)} pallets proporcionados"
+            )
+
+        logger.info(f"Se encontraron {len(devices)} dispositivos")
+
+        # Crear CSV en memoria
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Escribir encabezados
+        writer.writerow(['IMEI', 'ICCID', 'MARCA', 'OPERADOR', 'NUMERO_PALET'])
+
+        # Escribir datos
+        for device in devices:
+            writer.writerow([
+                device.imei or '',
+                device.ccid or '',
+                device.marca or '',
+                device.operador or '',
+                device.pallet_id or ''
+            ])
+
+        # Preparar respuesta
+        output.seek(0)
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=dispositivos_pallets_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exportando dispositivos por pallets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generando CSV: {str(e)}"
         )
 
 
