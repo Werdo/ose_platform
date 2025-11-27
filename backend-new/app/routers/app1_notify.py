@@ -500,28 +500,40 @@ async def validate_bulk_series(
             if device.notificado:
                 resultados.append({
                     "imei": imei_clean,
+                    "iccid": device.ccid or "",
                     "valido": True,
                     "existe": True,
                     "notificado": True,
                     "device_id": str(device.id),
-                    "marca": device.marca,
-                    "nro_referencia": device.nro_referencia,
+                    "marca": device.marca or "",
+                    "nro_referencia": device.nro_referencia or "",
                     "estado": device.estado.value,
                     "cliente": device.cliente,
                     "cliente_nombre": device.cliente_nombre,
+                    "operador": device.operador or "",
+                    "caja_master": device.package_no or "",
+                    "pallet_id": device.pallet_id or "",
+                    "package_no": device.package_no or "",
+                    "order_number": device.nro_orden or "",
                     "message": f"⚠️ Ya notificado a: {device.cliente_nombre or 'cliente desconocido'} (se puede reenviar)"
                 })
                 validos += 1  # Cambiado: permitir reenvío
             else:
                 resultados.append({
                     "imei": imei_clean,
+                    "iccid": device.ccid or "",
                     "valido": True,
                     "existe": True,
                     "notificado": False,
                     "device_id": str(device.id),
-                    "marca": device.marca,
-                    "nro_referencia": device.nro_referencia,
+                    "marca": device.marca or "",
+                    "nro_referencia": device.nro_referencia or "",
                     "estado": device.estado.value,
+                    "operador": device.operador or "",
+                    "caja_master": device.package_no or "",
+                    "pallet_id": device.pallet_id or "",
+                    "package_no": device.package_no or "",
+                    "order_number": device.nro_orden or "",
                     "message": "✓ Disponible para notificar"
                 })
                 validos += 1
