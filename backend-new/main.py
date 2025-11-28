@@ -12,7 +12,7 @@ import logging
 from app.config import settings
 from app.database import init_db, close_db, check_database_health
 from app.routers import auth, app1_notify, app2_import, app3_rma, app4_transform, public_auth, public_tickets
-from app.routers import app5_invoice, app6_picking, app8_iccid_calculator, system_logs, brand_update, employees, client_users
+from app.routers import app5_invoice, app6_picking, app8_iccid_calculator, system_logs, brand_update, employees, client_users, brands
 
 # Configurar logging
 logging.basicConfig(
@@ -119,7 +119,7 @@ if settings.FEATURE_APP3_ENABLED:
 
 # App 4: Transform & Import
 if settings.FEATURE_APP4_ENABLED:
-    app.include_router(app4_transform.router, prefix=settings.API_V1_PREFIX)
+    app.include_router(app4_transform.router, prefix="/api")
     logger.info("✓ App 4 (Transform & Import) enabled")
 
 # App 5: Sistema de Facturación de Tickets
@@ -161,6 +161,10 @@ logger.info("✓ System Logs (Monitoreo) enabled")
 # Brand Update - Actualización masiva de marcas
 app.include_router(brand_update.router, prefix=settings.API_V1_PREFIX, tags=["Brand Update"])
 logger.info("✓ Brand Update (Actualización de Marcas) enabled")
+
+# Brands Management - Gestión de marcas
+app.include_router(brands.router, prefix=settings.API_V1_PREFIX)
+logger.info("✓ Brands Management (Gestión de Marcas) enabled")
 
 
 # ════════════════════════════════════════════════════════════════════════

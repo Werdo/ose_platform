@@ -89,6 +89,8 @@ class Database:
         from app.models.iccid_generation import ICCIDGenerationBatch
         from app.models.iccid_batch import ICCIDBatch
         from app.models.client_user import ClientUser
+        from app.models.series_notification import SeriesNotification
+        from app.models.brand import Brand
 
         return [
             Device,
@@ -116,6 +118,8 @@ class Database:
             ICCIDBatch,  # App 8: Lotes de ICCID con análisis
             SystemLog,  # System: Logs del sistema
             ClientUser,  # System: Usuarios clientes externos
+            SeriesNotification,  # App 1: Historial de notificaciones de series
+            Brand,  # System: Marcas de dispositivos
         ]
 
     @classmethod

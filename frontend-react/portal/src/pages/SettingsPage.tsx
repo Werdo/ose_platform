@@ -3,6 +3,7 @@
  */
 
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap'
+import BrandManagement from '../components/settings/BrandManagement'
 
 export default function SettingsPage() {
   return (
@@ -11,6 +12,13 @@ export default function SettingsPage() {
         <Col>
           <h2>Configuración</h2>
           <p className="text-muted">Personaliza tu experiencia</p>
+        </Col>
+      </Row>
+
+      {/* Brand Management - Full Width */}
+      <Row className="mb-3">
+        <Col>
+          <BrandManagement />
         </Col>
       </Row>
 

@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import time
 import pandas as pd
+import numpy as np
 import io
 import re
 
@@ -167,11 +168,16 @@ def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 @router.post("/upload", status_code=status.HTTP_200_OK)
 async def upload_and_import_file(
     file: UploadFile = File(...),
+    brand: Optional[str] = None,
     request: Request = None,
     current_user: Employee = Depends(get_current_employee)
 ):
     """
     Carga e importa un archivo Excel o CSV con datos de dispositivos
+
+    **Parámetros:**
+    - file: Archivo Excel o CSV
+    - brand: Marca del dispositivo (opcional). Si se especifica, sobrescribe la marca del archivo
 
     **Campos esperados en el archivo:**
     - imei o imei_1: IMEI principal (requerido, 15 dígitos)
@@ -293,11 +299,21 @@ async def upload_and_import_file(
             # Verificar si el dispositivo ya existe
             existing_device = await Device.buscar_por_imei(imei)
             if existing_device:
-                import_record.add_error(
-                    row_number,
-                    'imei',
-                    f"IMEI {imei} ya existe en la base de datos"
-                )
+                # Si existe y se especificó una marca, actualizar la marca del dispositivo
+                if brand:
+                    existing_device.marca = brand
+                    await existing_device.save()
+                    import_record.add_warning(
+                        row_number,
+                        'imei',
+                        f"IMEI {imei} ya existía - marca actualizada a '{brand}'"
+                    )
+                else:
+                    import_record.add_error(
+                        row_number,
+                        'imei',
+                        f"IMEI {imei} ya existe en la base de datos"
+                    )
                 import_record.duplicate_count += 1
                 continue
 
@@ -311,6 +327,11 @@ async def upload_and_import_file(
                 'creado_por': current_user.name
             }
 
+            # Aplicar marca del parámetro si está especificado
+            if brand:
+                device_data['marca'] = brand
+                summary_data['marcas'].add(brand)
+
             # Campos opcionales
             optional_fields = [
                 'package_no', 'nro_orden', 'lote', 'codigo_innerbox',
@@ -321,11 +342,21 @@ async def upload_and_import_file(
             for field in optional_fields:
                 if field in row and pd.notna(row[field]):
                     value = row[field]
-                    # Convertir a string si es numérico
-                    if pd.api.types.is_numeric_dtype(type(value)):
-                        value = str(int(value)) if value == int(value) else str(value)
+                    # Convertir a string
+                    if isinstance(value, (int, float, np.integer, np.floating)):
+                        # Si es numérico, convertir a string eliminando decimales innecesarios
+                        if isinstance(value, (int, np.integer)):
+                            value = str(value)
+                        elif value == int(value):  # Float sin decimales (ej: 123.0)
+                            value = str(int(value))
+                        else:
+                            value = str(value)
                     else:
                         value = str(value).strip()
+
+                    # Si hay brand parameter, no sobrescribir la marca
+                    if field == 'marca' and brand:
+                        continue
 
                     device_data[field] = value
 
@@ -1062,12 +1093,19 @@ async def upload_with_template(
     file: UploadFile = File(...),
     template_id: str = None,
     template_name: str = None,
+    brand: Optional[str] = None,
     request: Request = None,
     current_user: Employee = Depends(get_current_employee)
 ):
     """
     Importa un archivo Excel/CSV usando una plantilla específica
     Puede especificar template_id o template_name
+
+    **Parámetros:**
+    - file: Archivo Excel o CSV
+    - template_id: ID de la plantilla (opcional)
+    - template_name: Nombre de la plantilla (opcional)
+    - brand: Marca del dispositivo (opcional). Si se especifica, sobrescribe la marca de la plantilla
     """
 
     start_time = time.time()
@@ -1199,11 +1237,21 @@ async def upload_with_template(
             # Verificar si el dispositivo ya existe
             existing_device = await Device.buscar_por_imei(imei)
             if existing_device:
-                import_record.add_error(
-                    row_number,
-                    'imei',
-                    f"IMEI {imei} ya existe en la base de datos"
-                )
+                # Si existe y se especificó una marca, actualizar la marca del dispositivo
+                if brand:
+                    existing_device.marca = brand
+                    await existing_device.save()
+                    import_record.add_warning(
+                        row_number,
+                        'imei',
+                        f"IMEI {imei} ya existía - marca actualizada a '{brand}'"
+                    )
+                else:
+                    import_record.add_error(
+                        row_number,
+                        'imei',
+                        f"IMEI {imei} ya existe en la base de datos"
+                    )
                 import_record.duplicate_count += 1
                 continue
 
@@ -1220,6 +1268,11 @@ async def upload_with_template(
             # Aplicar valores por defecto de la plantilla
             if template.default_values:
                 device_data.update(template.default_values)
+
+            # Sobrescribir marca si se especificó el parámetro brand
+            if brand:
+                device_data['marca'] = brand
+                summary_data['marcas'].add(brand)
 
             # Mapear campos del DataFrame a device_data
             field_mapping = {
@@ -1241,11 +1294,21 @@ async def upload_with_template(
             for source_field, target_field in field_mapping.items():
                 if source_field in row and pd.notna(row[source_field]):
                     value = row[source_field]
-                    # Convertir a string si es numérico
-                    if pd.api.types.is_numeric_dtype(type(value)):
-                        value = str(int(value)) if value == int(value) else str(value)
+                    # Convertir a string
+                    if isinstance(value, (int, float, np.integer, np.floating)):
+                        # Si es numérico, convertir a string eliminando decimales innecesarios
+                        if isinstance(value, (int, np.integer)):
+                            value = str(value)
+                        elif value == int(value):  # Float sin decimales (ej: 123.0)
+                            value = str(int(value))
+                        else:
+                            value = str(value)
                     else:
                         value = str(value).strip()
+
+                    # Si hay brand parameter, no sobrescribir la marca
+                    if target_field == 'marca' and brand:
+                        continue
 
                     device_data[target_field] = value
 

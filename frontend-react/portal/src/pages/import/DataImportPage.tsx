@@ -11,6 +11,7 @@ import {
 } from 'react-bootstrap'
 import { apiService } from '../../services/api.service'
 import importTemplateService from '../../services/import-template.service'
+import brandService, { Brand } from '../../services/brand.service'
 import type { ImportTemplateListItem, ImportTemplate } from '../../types/import-template'
 import IccidGeneratorTab from './IccidGeneratorTab'
 import toast from 'react-hot-toast'
@@ -71,11 +72,17 @@ export default function DataImportPage() {
   const [selectedTemplateDetails, setSelectedTemplateDetails] = useState<ImportTemplate | null>(null)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
 
+  // Brand selector state
+  const [selectedBrand, setSelectedBrand] = useState<string>('')
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [loadingBrands, setLoadingBrands] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadHistory()
     loadTemplates()
+    loadBrands()
   }, [])
 
   const loadHistory = async () => {
@@ -100,6 +107,20 @@ export default function DataImportPage() {
       toast.error('Error al cargar las plantillas')
     } finally {
       setLoadingTemplates(false)
+    }
+  }
+
+  const loadBrands = async () => {
+    setLoadingBrands(true)
+    try {
+      const response = await brandService.getBrands(true) // Only active brands
+      if (response.success && response.brands) {
+        setBrands(response.brands)
+      }
+    } catch (err: any) {
+      console.error('Error cargando marcas:', err)
+    } finally {
+      setLoadingBrands(false)
     }
   }
 
@@ -193,11 +214,17 @@ export default function DataImportPage() {
 
       // Upload with template if selected
       if (selectedTemplate) {
-        response = await importTemplateService.uploadWithTemplate(selectedFile, selectedTemplate)
+        response = await importTemplateService.uploadWithTemplate(selectedFile, selectedTemplate, selectedBrand)
       } else {
         // Use default upload endpoint
         const formData = new FormData()
         formData.append('file', selectedFile)
+
+        // Add brand parameter if selected
+        if (selectedBrand) {
+          formData.append('brand', selectedBrand)
+        }
+
         response = await apiService.upload('/api/app2/upload', formData)
       }
 
@@ -210,9 +237,10 @@ export default function DataImportPage() {
       // Recargar historial
       await loadHistory()
 
-      // Limpiar archivo seleccionado y plantilla
+      // Limpiar archivo seleccionado, plantilla y marca
       setSelectedFile(null)
       setSelectedTemplate('')
+      setSelectedBrand('')
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -277,7 +305,7 @@ export default function DataImportPage() {
               {/* Template Selector */}
               <Card className="mb-4">
                 <Card.Body>
-                  <Form.Group>
+                  <Form.Group className="mb-3">
                     <Form.Label>
                       <i className="bi bi-file-earmark-ruled me-2"></i>
                       Plantilla de Importación (Opcional)
@@ -299,6 +327,28 @@ export default function DataImportPage() {
                         La plantilla aplicará mapeo de columnas y validaciones personalizadas
                       </Form.Text>
                     )}
+                  </Form.Group>
+
+                  <Form.Group>
+                    <Form.Label>
+                      <i className="bi bi-tag me-2"></i>
+                      Marca del Dispositivo (Opcional)
+                    </Form.Label>
+                    <Form.Select
+                      value={selectedBrand}
+                      onChange={(e) => setSelectedBrand(e.target.value)}
+                      disabled={uploading || loadingBrands}
+                    >
+                      <option value="">Usar marca del archivo o plantilla</option>
+                      {brands.map((brand) => (
+                        <option key={brand.id} value={brand.name}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Text className="text-muted">
+                      Si se especifica, esta marca se aplicará a todos los dispositivos del archivo
+                    </Form.Text>
                   </Form.Group>
                 </Card.Body>
               </Card>
