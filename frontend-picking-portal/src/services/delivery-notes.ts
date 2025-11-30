@@ -4,7 +4,8 @@ import apiClient from './api';
 // DELIVERY NOTES / ALBARANES EST912 - API FUNCTIONS
 // ════════════════════════════════════════════════════════════════════════
 
-const DELIVERY_API_BASE = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'}/api/v1/delivery-notes`;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+const DELIVERY_API_BASE = `${API_BASE_URL}/api/v1/delivery-notes`;
 
 export interface DeliveryNote {
   id?: string;
