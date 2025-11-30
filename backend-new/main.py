@@ -12,7 +12,7 @@ import logging
 from app.config import settings
 from app.database import init_db, close_db, check_database_health
 from app.routers import auth, app1_notify, app2_import, app3_rma, app4_transform, public_auth, public_tickets
-from app.routers import app5_invoice, app6_picking, app8_iccid_calculator, system_logs, brand_update, employees, client_users, brands
+from app.routers import app5_invoice, app6_picking, app8_iccid_calculator, system_logs, brand_update, employees, client_users, brands, delivery_notes
 
 # Configurar logging
 logging.basicConfig(
@@ -166,6 +166,10 @@ logger.info("✓ Brand Update (Actualización de Marcas) enabled")
 app.include_router(brands.router, prefix=settings.API_V1_PREFIX)
 logger.info("✓ Brands Management (Gestión de Marcas) enabled")
 
+# Delivery Notes - Albaranes con códigos EST912
+app.include_router(delivery_notes.router, prefix=settings.API_V1_PREFIX)
+logger.info("✓ Delivery Notes (Albaranes EST912) enabled")
+
 
 # ════════════════════════════════════════════════════════════════════════
 # ENDPOINTS BÁSICOS
@@ -287,5 +291,6 @@ if __name__ == "__main__":
         limit_concurrency=1000,
         limit_max_requests=10000
     )
+
 
 

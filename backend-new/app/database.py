@@ -91,6 +91,7 @@ class Database:
         from app.models.client_user import ClientUser
         from app.models.series_notification import SeriesNotification
         from app.models.brand import Brand
+        from app.models.delivery_note import DeliveryNote, DeliveryNoteSequence
 
         return [
             Device,
@@ -120,6 +121,8 @@ class Database:
             ClientUser,  # System: Usuarios clientes externos
             SeriesNotification,  # App 1: Historial de notificaciones de series
             Brand,  # System: Marcas de dispositivos
+            DeliveryNote,  # Albaranes con códigos EST912
+            DeliveryNoteSequence,  # Contador de secuencia EST912
         ]
 
     @classmethod

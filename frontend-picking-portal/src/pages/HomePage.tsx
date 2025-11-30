@@ -73,19 +73,19 @@ const HomePage = () => {
       )}
 
       <Row className="g-4">
-        <Col md={6}>
+        <Col md={4}>
           <Link to="/palets" className="text-decoration-none">
             <Card className="h-100 hover-shadow border-0 shadow-sm picking-card">
-              <Card.Body className="d-flex flex-column align-items-center justify-content-center p-5 text-center">
-                <div className="mb-4">
-                  <i className="bi bi-stack text-primary" style={{ fontSize: '5rem' }}></i>
+              <Card.Body className="d-flex flex-column align-items-center justify-content-center p-4 text-center">
+                <div className="mb-3">
+                  <i className="bi bi-stack text-primary" style={{ fontSize: '4rem' }}></i>
                 </div>
-                <h2 className="fw-bold text-primary mb-3">Picking Palets</h2>
-                <p className="text-muted fs-5 mb-0">
-                  Gestión de envíos grandes y consolidados
+                <h3 className="fw-bold text-primary mb-2">Picking Palets</h3>
+                <p className="text-muted mb-0">
+                  Envíos grandes y consolidados
                 </p>
-                <div className="mt-4">
-                  <span className="badge bg-primary fs-6 px-4 py-2">
+                <div className="mt-3">
+                  <span className="badge bg-primary px-3 py-2">
                     Acceder <i className="bi bi-arrow-right ms-2"></i>
                   </span>
                 </div>
@@ -94,19 +94,40 @@ const HomePage = () => {
           </Link>
         </Col>
 
-        <Col md={6}>
+        <Col md={4}>
           <Link to="/paquetes" className="text-decoration-none">
             <Card className="h-100 hover-shadow border-0 shadow-sm picking-card">
-              <Card.Body className="d-flex flex-column align-items-center justify-content-center p-5 text-center">
-                <div className="mb-4">
-                  <i className="bi bi-box-seam text-success" style={{ fontSize: '5rem' }}></i>
+              <Card.Body className="d-flex flex-column align-items-center justify-content-center p-4 text-center">
+                <div className="mb-3">
+                  <i className="bi bi-box-seam text-success" style={{ fontSize: '4rem' }}></i>
                 </div>
-                <h2 className="fw-bold text-success mb-3">Picking Paquetes</h2>
-                <p className="text-muted fs-5 mb-0">
-                  Gestión de paquetes individuales y envíos directos
+                <h3 className="fw-bold text-success mb-2">Picking Paquetes</h3>
+                <p className="text-muted mb-0">
+                  Paquetes individuales y envíos directos
                 </p>
-                <div className="mt-4">
-                  <span className="badge bg-success fs-6 px-4 py-2">
+                <div className="mt-3">
+                  <span className="badge bg-success px-3 py-2">
+                    Acceder <i className="bi bi-arrow-right ms-2"></i>
+                  </span>
+                </div>
+              </Card.Body>
+            </Card>
+          </Link>
+        </Col>
+
+        <Col md={4}>
+          <Link to="/etiquetas" className="text-decoration-none">
+            <Card className="h-100 hover-shadow border-0 shadow-sm picking-card">
+              <Card.Body className="d-flex flex-column align-items-center justify-content-center p-4 text-center">
+                <div className="mb-3">
+                  <i className="bi bi-upc-scan text-warning" style={{ fontSize: '4rem' }}></i>
+                </div>
+                <h3 className="fw-bold text-warning mb-2">Albaranes y Etiquetas</h3>
+                <p className="text-muted mb-0">
+                  Códigos EST912 y generación de etiquetas
+                </p>
+                <div className="mt-3">
+                  <span className="badge bg-warning text-dark px-3 py-2">
                     Acceder <i className="bi bi-arrow-right ms-2"></i>
                   </span>
                 </div>

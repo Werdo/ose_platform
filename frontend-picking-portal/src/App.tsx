@@ -3,6 +3,7 @@ import { Navbar, Container, Nav } from 'react-bootstrap';
 import HomePage from './pages/HomePage';
 import PalletPicking from './pages/PalletPicking';
 import PackagePicking from './pages/PackagePicking';
+import DeliveryLabels from './pages/DeliveryLabels';
 
 function App() {
   return (
@@ -29,6 +30,10 @@ function App() {
                   <i className="bi bi-box-seam me-1"></i>
                   Paquetes
                 </Nav.Link>
+                <Nav.Link as={Link} to="/etiquetas">
+                  <i className="bi bi-upc-scan me-1"></i>
+                  Etiquetas
+                </Nav.Link>
               </Nav>
             </Navbar.Collapse>
           </Container>
@@ -39,6 +44,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/palets" element={<PalletPicking />} />
             <Route path="/paquetes" element={<PackagePicking />} />
+            <Route path="/etiquetas" element={<DeliveryLabels />} />
           </Routes>
         </main>
 
