@@ -27,7 +27,7 @@ const PalletPicking = () => {
 
   const loadPallets = async () => {
     try {
-      const data = await getPallets(50);
+      const data = await getPallets({ limit: 50 });
       setPallets(data);
     } catch (error) {
       console.error('Error loading pallets:', error);
@@ -55,14 +55,17 @@ const PalletPicking = () => {
 
     setLoading(true);
     try {
+      // Convert comma-separated contenido_ids string to array
+      const contenidoIdsArray = formData.contenido_ids.trim()
+        ? formData.contenido_ids.split(',').map(id => id.trim()).filter(id => id)
+        : [];
+
       const payload = {
-        pallet_number: formData.pallet_number.trim(),
         tipo_contenido: formData.tipo_contenido.trim(),
-        contenido_ids: formData.contenido_ids.trim(),
+        contenido_ids: contenidoIdsArray,
         pedido_id: formData.pedido_id.trim() || undefined,
         peso_kg: formData.peso_kg ? parseFloat(formData.peso_kg) : undefined,
         notas: formData.notas.trim() || undefined,
-        creado_por: 'operario@ose.com',
       };
 
       await createPallet(payload);

@@ -32,7 +32,7 @@ const PackagePicking = () => {
 
   const loadPackages = async () => {
     try {
-      const data = await getPackages(50);
+      const data = await getPackages({ limit: 50 });
       setPackages(data);
     } catch (error) {
       console.error('Error loading packages:', error);
@@ -63,13 +63,12 @@ const PackagePicking = () => {
       const payload = {
         tracking_number: formData.tracking_number.trim(),
         transportista: formData.transportista,
-        order_code: formData.order_code.trim() || undefined,
-        cliente_email: formData.cliente_email.trim() || undefined,
+        order_code: formData.order_code.trim() || '',
+        cliente_email: formData.cliente_email.trim() || '',
+        dispositivos_imeis: [], // Required field - empty array as we're using dispositivos_info instead
         cliente_nombre: formData.cliente_nombre.trim() || undefined,
-        dispositivos_info: formData.dispositivos_info.trim() || undefined,
         peso_kg: formData.peso_kg ? parseFloat(formData.peso_kg) : undefined,
         notas: formData.notas.trim() || undefined,
-        creado_por: 'operario@ose.com',
       };
 
       await createPackage(payload);
@@ -102,7 +101,7 @@ const PackagePicking = () => {
     if (window.confirm(`¿Marcar el paquete ${pkg.tracking_number} como enviado?`)) {
       setActionLoading((prev) => ({ ...prev, [pkg.id]: true }));
       try {
-        await markAsSent(pkg.id);
+        await markAsSent(pkg.tracking_number);
         showAlert('success', `Paquete ${pkg.tracking_number} marcado como enviado`);
         await loadPackages();
       } catch (error: any) {
@@ -124,7 +123,7 @@ const PackagePicking = () => {
     if (window.confirm(`¿Enviar notificación al cliente ${pkg.cliente_email}?`)) {
       setActionLoading((prev) => ({ ...prev, [pkg.id]: true }));
       try {
-        await sendNotification(pkg.id);
+        await sendNotification(pkg.tracking_number);
         showAlert('success', `Notificación enviada a ${pkg.cliente_email}`);
         await loadPackages();
       } catch (error: any) {
